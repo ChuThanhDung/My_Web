@@ -1,0 +1,19 @@
+# ============================================
+# render.yaml — Deploy Backend (FastAPI) lên Render
+# Hướng dẫn: push repo lên GitHub, vào render.com > New > Web Service
+# ============================================
+services:
+  - type: web
+    name: ml-portfolio-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true          # Render tự tạo key ngẫu nhiên an toàn
+      - key: ALLOWED_ORIGINS
+        value: https://YOUR_VERCEL_APP.vercel.app  # Thay bằng URL Vercel thực tế
+      - key: DATABASE_URL
+        value: sqlite:///./sql_app.db
+    plan: free

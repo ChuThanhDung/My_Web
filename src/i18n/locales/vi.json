@@ -1,0 +1,40 @@
+{
+  "nav": {
+    "home": "Trang chủ",
+    "ml": "Machine Learning",
+    "projects": "Dự án",
+    "about": "Giới thiệu",
+    "contact": "Liên hệ"
+  },
+  "home": {
+    "greeting": "Xin chào, tôi là",
+    "role": "Lập trình viên Full Stack & Đam mê AI",
+    "intro": "Tôi xây dựng các ứng dụng mở rộng và tạo ra những trải nghiệm web hiện đại. Đam mê với mã nguồn sạch, các hệ thống thông minh và không ngừng học hỏi.",
+    "cta_primary": "Xem Dự án"
+  },
+  "ml": {
+    "title": "Chủ đề Machine Learning",
+    "subtitle": "Khám phá các thuật toán và khái niệm trong Machine Learning.",
+    "pca": {
+      "title": "PCA",
+      "desc": "Phân tích thành phần chính (PCA) để giảm chiều dữ liệu."
+    },
+    "kmeans": {
+      "title": "K-Means",
+      "desc": "Thuật toán phân cụm chia dữ liệu thành K nhóm riêng biệt."
+    },
+    "naive_bayes": {
+      "title": "Naive Bayes",
+      "desc": "Bộ phân loại xác suất dựa trên định lý Bayes."
+    },
+    "logistic_regression": {
+      "title": "Hồi quy Logistic",
+      "desc": "Mô hình thống kê được sử dụng cho phân loại nhị phân."
+    },
+    "svm": {
+      "title": "SVM",
+      "desc": "Máy học vector hỗ trợ (SVM) cho bài toán phân loại và hồi quy."
+    },
+    "learn_more": "Tìm hiểu thêm →"
+  }
+}

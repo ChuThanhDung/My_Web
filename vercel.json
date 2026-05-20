@@ -1,0 +1,13 @@
+# ============================================
+# vercel.json — Deploy Frontend (React/Vite)
+# Hướng dẫn: push repo lên GitHub rồi import vào vercel.com
+# ============================================
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "installCommand": "npm install"
+}

@@ -1,0 +1,40 @@
+{
+  "nav": {
+    "home": "Home",
+    "ml": "Machine Learning",
+    "projects": "Projects",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "home": {
+    "greeting": "Hello, I'm",
+    "role": "Full Stack Developer & AI Enthusiast",
+    "intro": "I build scalable applications and craft modern web experiences. Passionate about clean code, intelligent systems, and continuous learning.",
+    "cta_primary": "View Projects"
+  },
+  "ml": {
+    "title": "Machine Learning Topics",
+    "subtitle": "Explore various algorithms and concepts in Machine Learning.",
+    "pca": {
+      "title": "PCA",
+      "desc": "Principal Component Analysis for dimensionality reduction."
+    },
+    "kmeans": {
+      "title": "K-Means",
+      "desc": "Clustering algorithm to partition data into K distinct groups."
+    },
+    "naive_bayes": {
+      "title": "Naive Bayes",
+      "desc": "Probabilistic classifier based on Bayes' theorem."
+    },
+    "logistic_regression": {
+      "title": "Logistic Regression",
+      "desc": "Statistical model used for binary classification."
+    },
+    "svm": {
+      "title": "SVM",
+      "desc": "Support Vector Machines for robust classification and regression."
+    },
+    "learn_more": "Learn more →"
+  }
+}
