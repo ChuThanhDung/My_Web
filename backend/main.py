@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+from contextlib import asynccontextmanager
 import models
 import schemas
 from database import engine, get_db
@@ -16,7 +17,18 @@ load_dotenv()
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="ML Portfolio API")
+@asynccontextmanager
+async def lifespan(app):
+    # Auto-seed DB khi app khởi động (chỉ insert nếu chưa có data)
+    try:
+        from seed import seed
+        seed()
+        print("✅ Auto-seed completed")
+    except Exception as e:
+        print(f"⚠️ Seed skipped: {e}")
+    yield
+
+app = FastAPI(title="ML Portfolio API", lifespan=lifespan)
 
 @app.get("/")
 def root():
