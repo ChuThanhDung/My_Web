@@ -3,13 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { BlockMath, InlineMath } from 'react-katex';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, BookOpen, Calculator, ShieldAlert, GitMerge } from 'lucide-react';
+// removed unused imports
 
 export default function LogisticRegressionContent() {
   const { i18n } = useTranslation();
   const isVi = i18n.language.startsWith('vi');
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  // removed openFaq
 
   const Section = ({ title, children, id, icon }: { title: string, children: React.ReactNode, id: string, icon?: string }) => (
     <section id={id} className="mb-16 scroll-mt-24">
@@ -74,26 +73,6 @@ y_prob = model.predict_proba(X_test_scaled)[:, 1] # Probability of Class 1
 print("Accuracy:", accuracy_score(y_test, y_pred))
 print("Confusion Matrix:\\n", confusion_matrix(y_test, y_pred))
 print("Classification Report:\\n", classification_report(y_test, y_pred))`;
-
-  const faqs = [
-    {
-      q: isVi ? "Tại sao gọi là Logistic Regression nhưng lại dùng để Phân loại?" : "Why is it called Logistic Regression if it's used for classification?",
-      a: isVi ? "Nó có chữ 'Regression' vì cấu trúc toán học cốt lõi của nó là Hồi quy tuyến tính (tính tổng có trọng số). Tuy nhiên, kết quả được đưa qua hàm Logistic (Sigmoid) để bóp giá trị về [0, 1], phù hợp cho mục đích phân loại xác suất." : "It contains 'Regression' because the underlying math is a linear regression (weighted sum). However, the output is passed through a Logistic (Sigmoid) function to squash the value into the [0, 1] range, making it a probabilistic classification model."
-    },
-    {
-      q: isVi ? "Hàm Sigmoid là gì?" : "What is the sigmoid function?",
-      a: isVi ? "Hàm Sigmoid là một hàm toán học có đường cong hình chữ S, biến đổi mọi số thực từ âm vô cùng đến dương vô cùng thành một khoảng giới hạn từ 0 đến 1. Nó đại diện cho xác suất của lớp Positive." : "The Sigmoid function is an S-shaped mathematical curve that maps any real-valued number into a value between 0 and 1. It represents the probability of the positive class."
-    },
-    {
-      q: isVi ? "Ngưỡng quyết định (Decision Threshold) là gì?" : "What is the decision threshold?",
-      a: isVi ? "Đây là mốc giá trị xác suất (thường là 0.5) để quyết định phân lớp. Nếu P(y=1) ≥ 0.5, dự đoán lớp 1, ngược lại dự đoán lớp 0. Ngưỡng này có thể thay đổi tùy bài toán." : "It is the probability cutoff (usually 0.5) used to classify samples. If P(y=1) ≥ 0.5, predict class 1, otherwise predict class 0. It can be tuned based on the problem."
-    },
-    {
-      q: isVi ? "Sự khác biệt giữa Logistic Regression và Linear Regression?" : "Difference between Logistic Regression and Linear Regression?",
-      a: isVi ? "Linear Regression dự đoán một giá trị liên tục (Ví dụ: giá nhà) và output có thể từ -∞ đến +∞. Logistic Regression dự đoán xác suất rớt vào một lớp (Ví dụ: Chó/Mèo) và output bị giới hạn từ 0 đến 1." : "Linear Regression predicts continuous values (e.g., house prices) with outputs from -∞ to +∞. Logistic Regression predicts class probabilities (e.g., Dog/Cat) bounded between 0 and 1."
-    }
-  ];
-
   /* ───────────── Logistic Interactive Simulator ───────────── */
   function LogisticSimulator() {
     const canvasRef = useRef<HTMLCanvasElement>(null);

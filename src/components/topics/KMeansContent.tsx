@@ -84,12 +84,7 @@ plt.title('K-Means Clustering (K=4)')
 plt.legend()
 plt.show()`;
 
-  /* ───────────── SVG Cluster Visualizer ───────────── */
-  const clusterData = [
-    { cx: 38, cy: 38, color: '#6366f1', points: [[22,28],[30,42],[48,22],[35,52],[42,30],[18,40],[55,35],[28,18]] },
-    { cx: 118, cy: 35, color: '#10b981', points: [[100,22],[112,45],[130,28],[108,18],[125,50],[95,38],[135,20],[115,55]] },
-    { cx: 75, cy: 108, color: '#f59e0b', points: [[58,95],[80,120],[65,125],[88,98],[72,88],[55,115],[90,115],[68,105]] },
-  ];
+  /* ───────────── SVG Cluster Visualizer (Removed) ───────────── */
 
   /* ───────────── K-Means Interactive Simulator ───────────── */
   const COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#ec4899','#06b6d4','#8b5cf6','#f97316'];
@@ -260,7 +255,6 @@ plt.show()`;
 
     const stepKMeans = useCallback(() => {
       const pts = pointsRef.current;
-      const cents = centroidsRef.current;
       if (pts.length < K) {
         setHint(isVi ? `⚠️ Cần ít nhất ${K} điểm. Hãy click thêm điểm lên canvas!` : `⚠️ Need at least ${K} points. Click to add more!`);
         return;
