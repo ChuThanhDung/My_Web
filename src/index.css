@@ -17,3 +17,12 @@
     @apply bg-white/70 dark:bg-dark-card/70 backdrop-blur-md border border-slate-200 dark:border-dark-border shadow-lg;
   }
 }
+
+/* ── KaTeX fix: hide MathML accessibility annotation (Tailwind preflight conflict) ── */
+.katex-mathml {
+  position: absolute !important;
+  clip: rect(1px, 1px, 1px, 1px) !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+}

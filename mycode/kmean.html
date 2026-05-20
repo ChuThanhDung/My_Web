@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-Means Academy - Trực Quan Hóa & Học Liệu Toàn Diện</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- MathJax for rendering math formulas beautifully -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        /* Custom scrollbar for premium look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Smooth transitions */
+        .tab-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Navigation / Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-indigo-600 to-violet-500 text-white p-3 rounded-2xl shadow-lg shadow-indigo-100">
+                    <i class="fa-solid fa-graduation-cap text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">K-Means Academy</h1>
+                    <p class="text-xs text-indigo-600 font-semibold tracking-wider uppercase">Nền tảng trực quan hóa & lý thuyết toàn diện</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <nav class="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                <button onclick="switchTab('simulation')" id="tab-simulation-btn" class="px-4 py-2 text-sm font-semibold rounded-lg tab-transition bg-white text-indigo-600 shadow-sm">
+                    <i class="fa-solid fa-play-circle mr-1.5"></i>Mô Phỏng Trực Quan
+                </button>
+                <button onclick="switchTab('theory')" id="tab-theory-btn" class="px-4 py-2 text-sm font-medium rounded-lg tab-transition text-slate-600 hover:text-slate-900">
+                    <i class="fa-solid fa-book-open mr-1.5"></i>Học Viện Lý Thuyết
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-quiz-btn" class="px-4 py-2 text-sm font-medium rounded-lg tab-transition text-slate-600 hover:text-slate-900">
+                    <i class="fa-solid fa-circle-question mr-1.5"></i>Bài Tập Ôn Tập
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Dynamic custom notification toast (Replaces system alert) -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-800 opacity-0 transform translate-y-4 pointer-events-none transition-all duration-300">
+        <span id="toast-icon" class="text-indigo-400 text-lg"></span>
+        <span id="toast-message" class="text-sm font-medium"></span>
+    </div>
+
+    <!-- Main Content wrapper -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- ================= TAB 1: INTERACTIVE SIMULATION ================= -->
+        <div id="tab-simulation" class="grid grid-cols-1 lg:grid-cols-12 gap-6 tab-transition">
+            
+            <!-- Left Side: Interactive Controls -->
+            <section class="lg:col-span-4 flex flex-col gap-6">
+                
+                <!-- Settings & Presets Box -->
+                <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col gap-5">
+                    <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-sliders text-indigo-600 text-lg"></i>
+                        <h2 class="font-bold text-slate-900 text-base">Cấu hình thuật toán</h2>
+                    </div>
+                    
+                    <!-- K Value Selector -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label for="k-slider" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Số lượng cụm (K)</label>
+                            <span id="k-value" class="text-xs font-bold bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full border border-indigo-100">3</span>
+                        </div>
+                        <input type="range" id="k-slider" min="2" max="8" value="3" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                    </div>
+
+                    <!-- Initialization Method Selector (K-Means++ educational component) -->
+                    <div>
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Phương pháp chọn Tâm ban đầu</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="btn-init-random" onclick="setInitMethod('random')" class="px-3 py-2 border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-xl tab-transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-random"></i> Ngẫu nhiên
+                            </button>
+                            <button id="btn-init-kmeansplus" onclick="setInitMethod('kmeansplus')" class="px-3 py-2 border border-slate-200 bg-white text-slate-600 text-xs font-medium rounded-xl tab-transition flex items-center justify-center gap-1.5 hover:bg-slate-50">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> K-Means++
+                            </button>
+                        </div>
+                        <p id="init-method-desc" class="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+                            Chọn tâm hoàn toàn ngẫu nhiên từ tập dữ liệu.
+                        </p>
+                    </div>
+
+                    <!-- Simulation Speed -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label for="speed-slider" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tốc độ chạy tự động</label>
+                            <span id="speed-value" class="text-xs font-semibold text-slate-600">1.0s / bước</span>
+                        </div>
+                        <input type="range" id="speed-slider" min="100" max="2000" step="100" value="1000" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                    </div>
+
+                    <hr class="border-slate-100">
+
+                    <!-- Dataset presets -->
+                    <div>
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Tạo dữ liệu mẫu nhanh</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="generateGaussianClusters()" class="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 tab-transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-braille text-indigo-500"></i> Cụm Gaussian
+                            </button>
+                            <button onclick="generateUniformRandom()" class="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 tab-transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-shuffle text-amber-500"></i> Phân bố Đều
+                            </button>
+                            <button onclick="generateCircularClusters()" class="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 tab-transition flex items-center justify-center gap-1.5 col-span-2">
+                                <i class="fa-solid fa-circle-dot text-emerald-500"></i> Vòng Tròn Đồng Tâm (Thử thách)
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-100">
+
+                    <!-- Interactive Step buttons -->
+                    <div class="flex flex-col gap-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="btn-step" onclick="stepKMeans()" class="w-full py-3 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-sm rounded-xl border border-indigo-200 tab-transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-forward-step"></i> Từng bước
+                            </button>
+                            <button id="btn-play" onclick="togglePlay()" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl tab-transition flex items-center justify-center gap-2 shadow-md shadow-indigo-100">
+                                <i class="fa-solid fa-play" id="play-icon"></i> <span id="play-text">Tự động chạy</span>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="resetClustering()" class="w-full py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl tab-transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-arrow-rotate-left"></i> Reset cụm
+                            </button>
+                            <button onclick="clearCanvas()" class="w-full py-2 px-4 bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs rounded-xl tab-transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-trash-can"></i> Xóa sạch
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Info Dashboard Card -->
+                <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col gap-4">
+                    <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i class="fa-solid fa-square-poll-vertical text-indigo-600 text-lg"></i>
+                        <h2 class="font-bold text-slate-900 text-base">Chẩn đoán thời gian thực</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Giai đoạn</span>
+                            <span id="current-phase" class="text-xs font-bold text-amber-600 block mt-1">Chưa khởi tạo</span>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Số vòng lặp</span>
+                            <span id="iterations-count" class="text-sm font-bold text-slate-800 block mt-0.5">0</span>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tổng số mẫu (N)</span>
+                            <span id="total-points" class="text-sm font-bold text-slate-800 block mt-0.5">0</span>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 font-mono">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Độ lỗi WCSS</span>
+                            <span id="wcss-value" class="text-sm font-bold text-indigo-600 block mt-0.5">N/A</span>
+                        </div>
+                    </div>
+
+                    <!-- Step Explanation Box -->
+                    <div class="p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
+                        <p class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-1">Mô tả lý thuyết bước này</p>
+                        <p id="step-explanation" class="text-xs text-slate-600 leading-relaxed font-medium">
+                            Hãy click chuột lên Canvas màu tối bên phải để vẽ dữ liệu hoặc bấm "Tạo dữ liệu mẫu nhanh" để xem phân tích.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Side: Interactive Canvas Visualizer -->
+            <section class="lg:col-span-8 flex flex-col gap-4">
+                <div class="bg-indigo-50 border border-indigo-100 text-indigo-900 px-4 py-3.5 rounded-2xl text-xs flex items-start gap-3">
+                    <i class="fa-solid fa-circle-info text-indigo-600 mt-0.5 text-base"></i>
+                    <div>
+                        <span class="font-bold block mb-0.5">Tính năng vẽ tay tự do:</span>
+                        Bạn có thể **Click trực tiếp lên tấm bảng Canvas** bất cứ lúc nào để thêm các mẫu dữ liệu mới. Thuật toán sẽ ngay lập tức tính toán và gán cụm tự động theo thời gian thực!
+                    </div>
+                </div>
+
+                <!-- Canvas Area -->
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-3 relative flex-1 flex flex-col min-h-[500px]">
+                    <div class="absolute top-5 left-5 z-10 bg-slate-900/80 backdrop-blur-md text-white py-1 px-3 rounded-full text-[10px] font-semibold flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></span>
+                        Bảng Vẽ Tương Tác K-Means
+                    </div>
+                    
+                    <canvas id="kmeans-canvas" class="bg-slate-900 rounded-2xl w-full h-full flex-1 cursor-crosshair shadow-inner min-h-[440px]"></canvas>
+                    
+                    <!-- Legends & Helper -->
+                    <div class="mt-3 flex flex-wrap gap-4 items-center justify-between text-xs text-slate-500 px-1">
+                        <div class="flex items-center gap-4">
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span> Điểm mẫu</span>
+                            <span class="flex items-center gap-1.5"><span class="inline-block w-4 h-4 text-center text-amber-400 font-bold"><i class="fa-solid fa-star"></i></span> Tâm cụm (Centroid)</span>
+                            <span class="flex items-center gap-1.5"><span class="border-t border-dashed border-slate-400 w-5 inline-block"></span> Đường gán khoảng cách</span>
+                        </div>
+                        <div id="action-hint" class="text-indigo-600 font-bold animate-pulse">
+                            <i class="fa-solid fa-hand-pointer mr-1"></i>Chạm để vẽ điểm dữ liệu
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= TAB 2: THEORY ACADEMY ================= -->
+        <div id="tab-theory" class="hidden max-w-4xl mx-auto flex flex-col gap-8 tab-transition">
+            
+            <!-- Quick overview card -->
+            <div class="bg-gradient-to-r from-indigo-900 to-indigo-800 text-white p-8 rounded-3xl shadow-lg relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 text-indigo-700/30 text-9xl font-bold opacity-30 pointer-events-none">
+                    K=3
+                </div>
+                <h2 class="text-2xl font-extrabold mb-3">Tìm Hiểu Sâu Về Phân Cụm K-Means</h2>
+                <p class="text-indigo-200 text-sm leading-relaxed max-w-2xl">
+                    K-Means là một trong những thuật toán phân cụm phân hoạch phổ biến nhất thuộc nhóm Học Không Giám Sát (Unsupervised Learning). Mục đích là gom nhóm $N$ phần tử dữ liệu chưa có nhãn vào $K$ cụm riêng biệt để giải quyết các bài toán phân khúc khách hàng, nén ảnh, phát hiện gian lận và nhiều ứng dụng thực tế khác.
+                </p>
+            </div>
+
+            <!-- Mathematical Core Section -->
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col gap-6">
+                <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-indigo-600"></i> 1. Cơ sở toán học của thuật toán
+                </h3>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    Thuật toán K-Means thực chất là giải bài toán tối ưu hóa nhằm giảm thiểu tổng bình phương khoảng cách giữa các điểm dữ liệu và tâm cụm tương ứng của chúng.
+                </p>
+
+                <!-- LaTeX Section -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 overflow-x-auto">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Hàm Mục Tiêu (Objective Function / WCSS)</p>
+                    <div class="text-slate-800 my-4 text-center text-sm md:text-base">
+                        $$J = \sum_{i=1}^{K} \sum_{x \in S_i} \|x - \mu_i\|^2$$
+                    </div>
+                    <ul class="text-xs text-slate-500 space-y-1.5 mt-4 list-disc pl-5">
+                        <li><strong>$K$:</strong> Số lượng cụm phân tích (do bạn thiết lập ban đầu).</li>
+                        <li><strong>$S_i$:</strong> Tập hợp tất cả các điểm dữ liệu thuộc cụm thứ $i$.</li>
+                        <li><strong>$\mu_i$:</strong> Vị trí tọa độ của tâm cụm (centroid) đại diện cho nhóm $S_i$.</li>
+                        <li><strong>$\|x - \mu_i\|^2$:</strong> Bình phương khoảng cách Euclid giữa điểm dữ liệu $x$ và tâm cụm $\mu_i$.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Công Thức Khoảng Cách Euclid (Trong không gian 2D)</p>
+                    <div class="text-slate-800 my-2 text-center text-sm md:text-base">
+                        $$d(A, B) = \sqrt{(x_A - x_B)^2 + (y_A - y_B)^2}$$
+                    </div>
+                </div>
+            </div>
+
+            <!-- Determining optimal K section -->
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col gap-6">
+                <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-indigo-600"></i> 2. Làm sao để chọn số lượng cụm K tối ưu?
+                </h3>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    Một trong những vấn đề cốt lõi của K-Means là lựa chọn số cụm $K$. Phương pháp phổ biến và tin cậy nhất là <strong>Phương pháp Khuỷu Tay (Elbow Method)</strong>.
+                </p>
+
+                <!-- Interactive SVG Elbow Graph Chart -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    <div class="md:col-span-7 bg-slate-900 p-4 rounded-2xl shadow-inner relative">
+                        <div class="text-white text-xs font-bold mb-4 text-center">Đồ thị WCSS theo số lượng K (Tương Tác)</div>
+                        <!-- SVG line chart representation of Elbow -->
+                        <svg viewBox="0 0 400 200" class="w-full h-auto">
+                            <!-- Grid lines -->
+                            <line x1="40" y1="20" x2="40" y2="170" stroke="#475569" stroke-width="1" />
+                            <line x1="40" y1="170" x2="380" y2="170" stroke="#475569" stroke-width="1" />
+                            
+                            <!-- X Axis labels -->
+                            <text x="40" y="185" fill="#94a3b8" font-size="10" text-anchor="middle">K=1</text>
+                            <text x="90" y="185" fill="#94a3b8" font-size="10" text-anchor="middle">K=2</text>
+                            <text x="140" y="185" fill="#94a3b8" font-size="10" text-anchor="middle" font-weight="bold" class="fill-indigo-400">K=3</text>
+                            <text x="190" y="185" fill="#94a3b8" font-size="10" text-anchor="middle">K=4</text>
+                            <text x="240" y="185" fill="#94a3b8" font-size="10" text-anchor="middle">K=5</text>
+                            <text x="290" y="185" fill="#94a3b8" font-size="10" text-anchor="middle">K=6</text>
+                            <text x="340" y="185" fill="#94a3b8" font-size="10" text-anchor="middle">K=7</text>
+
+                            <!-- Y Axis label -->
+                            <text x="15" y="90" fill="#94a3b8" font-size="8" transform="rotate(-90, 15, 90)" text-anchor="middle">Sai số WCSS</text>
+
+                            <!-- Chart Line -->
+                            <path d="M 40,30 L 90,80 L 140,140 L 190,155 L 240,163 L 290,168 L 340,170" fill="none" stroke="#6366f1" stroke-width="3" />
+
+                            <!-- Elbow marker pulse -->
+                            <circle cx="140" cy="140" r="10" fill="rgba(99, 102, 241, 0.3)" class="animate-pulse" />
+                            <circle cx="140" cy="140" r="4" fill="#818cf8" />
+                            
+                            <!-- Annotation label inside SVG -->
+                            <rect x="155" y="115" width="105" height="22" rx="4" fill="rgba(30, 41, 59, 0.9)" />
+                            <text x="160" y="129" fill="#38bdf8" font-size="8" font-weight="bold">Điểm Khuỷu Tay (K=3)</text>
+                        </svg>
+                    </div>
+                    <div class="md:col-span-5 flex flex-col gap-3">
+                        <h4 class="font-bold text-slate-800 text-sm">Cách diễn giải đồ thị khuỷu tay:</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed">
+                            Khi số lượng cụm $K$ tăng, các tâm cụm gần các điểm dữ liệu hơn nên giá trị sai số WCSS chắc chắn sẽ giảm dần.
+                        </p>
+                        <p class="text-xs text-slate-500 leading-relaxed">
+                            Tuy nhiên, kể từ **$K=3$**, biểu đồ giảm chậm rõ rệt (uốn khúc như nếp khuỷu tay). Điểm uốn này chính là số lượng cụm phân hoạch tối ưu, vừa giảm thiểu sai số, vừa tránh phân cụm quá mức (Overfitting).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Numerical manual run step section -->
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col gap-6">
+                <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-square-root-variable text-indigo-600"></i> 3. Ví dụ tính toán bằng số cụ thể (Chạy bằng tay)
+                </h3>
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    Giả sử ta có 4 điểm dữ liệu trên không gian 1 chiều: $A=2, B=4, C=10, D=12$. Chúng ta cần phân thành $K=2$ cụm.
+                </p>
+
+                <div class="overflow-x-auto rounded-2xl border border-slate-200">
+                    <table class="w-full text-sm text-left text-slate-500">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-4 py-3">Vòng lặp</th>
+                                <th class="px-4 py-3">Vị trí tâm cụm (Centroids)</th>
+                                <th class="px-4 py-3">Tính khoảng cách & Gán cụm</th>
+                                <th class="px-4 py-3">Cập nhật tâm mới (Trọng tâm)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="px-4 py-4 font-bold text-slate-900 text-xs">Vòng lặp 1</td>
+                                <td class="px-4 py-4 text-xs font-medium">Chọn ngẫu nhiên:<br><span class="text-indigo-600 font-bold">$M_1 = 2$</span> (điểm A)<br><span class="text-amber-600 font-bold">$M_2 = 10$</span> (điểm C)</td>
+                                <td class="px-4 py-4 text-xs">
+                                    - Điểm A(2): cách $M_1$=0, $M_2$=8 &rarr; <strong>Cụm 1</strong><br>
+                                    - Điểm B(4): cách $M_1$=2, $M_2$=6 &rarr; <strong>Cụm 1</strong><br>
+                                    - Điểm C(10): cách $M_1$=8, $M_2$=0 &rarr; <strong>Cụm 2</strong><br>
+                                    - Điểm D(12): cách $M_1$=10, $M_2$=2 &rarr; <strong>Cụm 2</strong>
+                                </td>
+                                <td class="px-4 py-4 text-xs font-semibold">
+                                    $M_1^{mới} = \frac{2 + 4}{2} = 3$<br>
+                                    $M_2^{mới} = \frac{10 + 12}{2} = 11$
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-4 font-bold text-slate-900 text-xs">Vòng lặp 2</td>
+                                <td class="px-4 py-4 text-xs font-medium">Sử dụng tâm mới:<br><span class="text-indigo-600 font-bold">$M_1 = 3$</span><br><span class="text-amber-600 font-bold">$M_2 = 11$</span></td>
+                                <td class="px-4 py-4 text-xs">
+                                    - Điểm A(2): cách $M_1$=1, $M_2$=9 &rarr; <strong>Cụm 1</strong><br>
+                                    - Điểm B(4): cách $M_1$=1, $M_2$=7 &rarr; <strong>Cụm 1</strong><br>
+                                    - Điểm C(10): cách $M_1$=7, $M_2$=1 &rarr; <strong>Cụm 2</strong><br>
+                                    - Điểm D(12): cách $M_1$=9, $M_2$=1 &rarr; <strong>Cụm 2</strong>
+                                </td>
+                                <td class="px-4 py-4 text-xs font-semibold text-emerald-600">
+                                    $M_1^{mới} = \frac{2 + 4}{2} = 3$<br>
+                                    $M_2^{mới} = \frac{10 + 12}{2} = 11$ <br>
+                                    <span class="text-[10px] font-bold uppercase">(Không đổi &rarr; Hội tụ!)</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pros and Cons -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-emerald-50/50 p-6 rounded-3xl border border-emerald-100 flex flex-col gap-3">
+                    <h4 class="font-bold text-emerald-800 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i> Điểm mạnh thuật toán
+                    </h4>
+                    <ul class="text-xs text-slate-600 space-y-2 list-disc pl-5 leading-relaxed">
+                        <li><strong>Tốc độ xử lý cực nhanh:</strong> Độ phức tạp tuyến tính $O(t \cdot k \cdot n)$ giúp nó làm việc tốt với hàng triệu mẫu dữ liệu.</li>
+                        <li><strong>Dễ hiểu & triển khai:</strong> Nguyên lý hình học khoảng cách đơn giản, trực quan hóa tốt.</li>
+                        <li><strong>Dễ dàng tối ưu:</strong> Luôn hội tụ về cực tiểu cục bộ rất nhanh chóng.</li>
+                    </ul>
+                </div>
+                <div class="bg-rose-50/50 p-6 rounded-3xl border border-rose-100 flex flex-col gap-3">
+                    <h4 class="font-bold text-rose-800 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-circle-xmark text-rose-600"></i> Hạn chế & Thách thức
+                    </h4>
+                    <ul class="text-xs text-slate-600 space-y-2 list-disc pl-5 leading-relaxed">
+                        <li><strong>Nhạy cảm với khởi đầu:</strong> Dễ bị kẹt ở cực tiểu cục bộ không tối ưu nếu chọn nhầm tâm cụm tệ (Giải quyết bằng **K-Means++**).</li>
+                        <li><strong>Phải biết trước K:</strong> Đòi hỏi suy đoán hoặc phân tích phụ để tìm K tối ưu.</li>
+                        <li><strong>Chỉ hoạt động với hình cầu/tròn:</strong> Thất bại hoàn toàn nếu các cụm dữ liệu phân bổ theo dạng vòng lồng, trăng khuyết hoặc dải dài.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: INTERACTIVE QUIZ ================= -->
+        <div id="tab-quiz" class="hidden max-w-2xl mx-auto flex flex-col gap-6 tab-transition">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col gap-6">
+                <div class="flex items-center gap-2 border-b border-slate-100 pb-4">
+                    <i class="fa-solid fa-trophy text-amber-500 text-xl"></i>
+                    <div>
+                        <h2 class="font-bold text-slate-900 text-lg">Học viên tự kiểm tra kiến thức</h2>
+                        <p class="text-xs text-slate-500">Trả lời nhanh các câu hỏi trắc nghiệm dưới đây để củng cố lý thuyết</p>
+                    </div>
+                </div>
+
+                <!-- Quiz Progress Bar -->
+                <div class="w-full bg-slate-100 rounded-full h-1.5">
+                    <div id="quiz-progress" class="bg-indigo-600 h-1.5 rounded-full tab-transition" style="width: 33%"></div>
+                </div>
+
+                <!-- Quiz Card Container -->
+                <div id="quiz-card" class="flex flex-col gap-4">
+                    <span id="quiz-question-num" class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">CÂU HỎI 1 / 3</span>
+                    <h3 id="quiz-question" class="font-bold text-slate-900 text-base leading-relaxed">
+                        K-Means Clustering thuộc nhóm thuật toán học máy nào dưới đây?
+                    </h3>
+
+                    <!-- Answers options -->
+                    <div class="flex flex-col gap-2.5 mt-2" id="quiz-options">
+                        <!-- Option buttons will be dynamically injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Quiz Nav action buttons -->
+                <div class="flex justify-between items-center border-t border-slate-100 pt-4 mt-2">
+                    <span id="quiz-score-indicator" class="text-xs font-semibold text-slate-500">Điểm số hiện tại: 0/3</span>
+                    <button id="btn-next-quiz" onclick="nextQuizQuestion()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-100 tab-transition hidden">
+                        Tiếp tục <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+                © 2026 K-Means Academy. Biên soạn & trực quan hóa bằng Canvas HTML5.
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="hover:text-slate-800 cursor-pointer">Lý thuyết</span>
+                <span>•</span>
+                <span class="hover:text-slate-800 cursor-pointer">Thuật toán ++</span>
+                <span>•</span>
+                <span class="hover:text-slate-800 cursor-pointer">Thử nghiệm</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Script logic -->
+    <script>
+        const canvas = document.getElementById('kmeans-canvas');
+        const ctx = canvas.getContext('2d');
+        const kSlider = document.getElementById('k-slider');
+        const kValueDisplay = document.getElementById('k-value');
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValueDisplay = document.getElementById('speed-value');
+        const totalPointsDisplay = document.getElementById('total-points');
+        const currentPhaseDisplay = document.getElementById('current-phase');
+        const iterationsDisplay = document.getElementById('iterations-count');
+        const wcssDisplay = document.getElementById('wcss-value');
+        const stepExplanation = document.getElementById('step-explanation');
+
+        // State variables
+        let points = [];
+        let centroids = []; // {x, y, targetX, targetY, colorIndex}
+        let k = parseInt(kSlider.value);
+        let currentStepPhase = 'not_started'; // 'not_started', 'initialized', 'assigned', 'updated', 'converged'
+        let iterationCount = 0;
+        let playIntervalId = null;
+        let animationFrameId = null;
+        let initMethod = 'random'; // 'random' or 'kmeansplus'
+
+        // Animation state variables
+        let isAnimating = false;
+
+        // Visual Palette for clusters (K up to 8)
+        const clusterColors = [
+            { main: '#FF5733', light: 'rgba(255, 87, 51, 0.25)', border: '#C70039' },   // Red-Orange
+            { main: '#10B981', light: 'rgba(16, 185, 129, 0.25)', border: '#047857' },   // Green
+            { main: '#3B82F6', light: 'rgba(59, 130, 246, 0.25)', border: '#1D4ED8' },   // Blue
+            { main: '#FBBF24', light: 'rgba(251, 191, 36, 0.35)', border: '#D97706' },   // Yellow
+            { main: '#EC4899', light: 'rgba(236, 72, 153, 0.25)', border: '#BE185D' },   // Magenta
+            { main: '#06B6D4', light: 'rgba(6, 182, 212, 0.25)', border: '#0891B2' },   // Cyan
+            { main: '#F97316', light: 'rgba(249, 115, 22, 0.25)', border: '#C2410C' },   // Orange
+            { main: '#8B5CF6', light: 'rgba(139, 92, 246, 0.25)', border: '#6D28D9' }    // Purple
+        ];
+        const unassignedColor = { main: '#94a3b8', light: 'rgba(148, 163, 184, 0.1)', border: '#475569' };
+
+        // Navigation Tab Switcher
+        function switchTab(tabName) {
+            const tabs = ['simulation', 'theory', 'quiz'];
+            tabs.forEach(t => {
+                const element = document.getElementById(`tab-${t}`);
+                const btn = document.getElementById(`tab-${t}-btn`);
+                if (t === tabName) {
+                    element.classList.remove('hidden');
+                    btn.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+                    btn.classList.remove('text-slate-600', 'hover:text-slate-900');
+                } else {
+                    element.classList.add('hidden');
+                    btn.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
+                    btn.classList.add('text-slate-600', 'hover:text-slate-900');
+                }
+            });
+            
+            // Trigger MathJax typeset update when theory tab is open
+            if (tabName === 'theory' && typeof MathJax !== 'undefined') {
+                MathJax.typeset();
+            }
+            showToast(`Đã chuyển sang: ${tabName === 'simulation' ? 'Bàn Mô Phỏng' : tabName === 'theory' ? 'Học Viện Lý Thuyết' : 'Bài Tập Ôn Tập'}`, 'fa-regular fa-folder-open');
+        }
+
+        // Custom notification system (Replaces system alerts safely)
+        function showToast(message, iconClass) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const text = document.getElementById('toast-message');
+            
+            icon.className = iconClass || 'fa-solid fa-info-circle';
+            text.textContent = message;
+            
+            toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 2500);
+        }
+
+        // Handle Canvas resizing and DPI scaling (With robust parent fallback calculations)
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            
+            // Robust check to avoid 0x0 initial canvas size
+            const width = rect.width || canvas.parentElement.clientWidth || 800;
+            const height = rect.height || canvas.parentElement.clientHeight || 500;
+
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            ctx.scale(dpr, dpr);
+            draw();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // Control listeners
+        kSlider.addEventListener('input', (e) => {
+            k = parseInt(e.target.value);
+            kValueDisplay.textContent = k;
+            resetClustering();
+        });
+
+        speedSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value) / 1000;
+            speedValueDisplay.textContent = val.toFixed(1) + 's / bước';
+            if (playIntervalId) {
+                stopAutoPlay();
+                startAutoPlay();
+            }
+        });
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = rect.width || canvas.parentElement.clientWidth || 800;
+            const scaleY = rect.height || canvas.parentElement.clientHeight || 500;
+            const x = (e.clientX - rect.left) / scaleX * canvas.width / (window.devicePixelRatio || 1);
+            const y = (e.clientY - rect.top) / scaleY * canvas.height / (window.devicePixelRatio || 1);
+            
+            points.push({ x, y, clusterIndex: -1 });
+            totalPointsDisplay.textContent = points.length;
+
+            if (currentStepPhase === 'assigned' || currentStepPhase === 'updated' || currentStepPhase === 'converged') {
+                currentStepPhase = 'initialized';
+                iterationCount = 0;
+                iterationsDisplay.textContent = iterationCount;
+            }
+            draw();
+        });
+
+        // Set Initialization Method
+        function setInitMethod(method) {
+            initMethod = method;
+            const btnRandom = document.getElementById('btn-init-random');
+            const btnPlus = document.getElementById('btn-init-kmeansplus');
+            const desc = document.getElementById('init-method-desc');
+
+            if (method === 'random') {
+                btnRandom.className = "px-3 py-2 border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-xl tab-transition flex items-center justify-center gap-1.5";
+                btnPlus.className = "px-3 py-2 border border-slate-200 bg-white text-slate-600 text-xs font-medium rounded-xl tab-transition flex items-center justify-center gap-1.5 hover:bg-slate-50";
+                desc.textContent = "Chọn tâm hoàn toàn ngẫu nhiên từ tập dữ liệu sẵn có.";
+            } else {
+                btnPlus.className = "px-3 py-2 border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-xl tab-transition flex items-center justify-center gap-1.5";
+                btnRandom.className = "px-3 py-2 border border-slate-200 bg-white text-slate-600 text-xs font-medium rounded-xl tab-transition flex items-center justify-center gap-1.5 hover:bg-slate-50";
+                desc.innerHTML = "<b>K-Means++:</b> Chọn tâm đầu tiên ngẫu nhiên, các tâm tiếp theo ưu tiên phân bố xa các tâm cũ bằng phân phối xác suất. Giúp hội tụ nhanh hơn!";
+            }
+            resetClustering();
+        }
+
+        // Generate Gaussian Clusters
+        function generateGaussianClusters() {
+            clearCanvas();
+            const width = canvas.width / (window.devicePixelRatio || 1) || 800;
+            const height = canvas.height / (window.devicePixelRatio || 1) || 500;
+            const numClusters = k;
+            const pointsPerCluster = Math.floor(120 / numClusters);
+
+            for (let c = 0; c < numClusters; c++) {
+                const centerX = width * (0.2 + Math.random() * 0.6);
+                const centerY = height * (0.2 + Math.random() * 0.6);
+                const stdDev = Math.min(width, height) * 0.08;
+
+                for (let i = 0; i < pointsPerCluster; i++) {
+                    const u1 = Math.random() || 0.0001;
+                    const u2 = Math.random() || 0.0001;
+                    const randStdNormalX = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+                    const randStdNormalY = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
+
+                    const x = centerX + randStdNormalX * stdDev;
+                    const y = centerY + randStdNormalY * stdDev;
+
+                    if (x > 10 && x < width - 10 && y > 10 && y < height - 10) {
+                        points.push({ x, y, clusterIndex: -1 });
+                    } else {
+                        i--;
+                    }
+                }
+            }
+            totalPointsDisplay.textContent = points.length;
+            draw();
+            stepExplanation.innerHTML = `Đã sinh tự động <b>${points.length}</b> mẫu phân bố theo <b>cụm Gaussian</b> thực tế. Click <b>"Từng bước"</b> để bắt đầu gom nhóm!`;
+            showToast("Đã sinh cụm dữ liệu Gaussian", "fa-solid fa-braille");
+        }
+
+        // Generate Uniform Random Points
+        function generateUniformRandom() {
+            clearCanvas();
+            const width = canvas.width / (window.devicePixelRatio || 1) || 800;
+            const height = canvas.height / (window.devicePixelRatio || 1) || 500;
+            const numPoints = 80;
+
+            for (let i = 0; i < numPoints; i++) {
+                points.push({
+                    x: 20 + Math.random() * (width - 40),
+                    y: 20 + Math.random() * (height - 40),
+                    clusterIndex: -1
+                });
+            }
+            totalPointsDisplay.textContent = points.length;
+            draw();
+            stepExplanation.innerHTML = `Đã sinh ngẫu nhiên <b>${points.length}</b> mẫu phân bố trải đều. Đây là thử thách khó cho K-Means vì không có cụm rõ rệt!`;
+            showToast("Đã sinh dữ liệu ngẫu nhiên đều", "fa-solid fa-shuffle");
+        }
+
+        // Generate Circular/Concentric Rings (Extreme K-Means Failure case)
+        function generateCircularClusters() {
+            clearCanvas();
+            const width = canvas.width / (window.devicePixelRatio || 1) || 800;
+            const height = canvas.height / (window.devicePixelRatio || 1) || 500;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // Inner Circle
+            const innerRadius = Math.min(width, height) * 0.15;
+            for (let i = 0; i < 45; i++) {
+                const angle = (i / 45) * 2 * Math.PI + (Math.random() * 0.1);
+                const r = innerRadius + (Math.random() - 0.5) * 15;
+                points.push({
+                    x: centerX + Math.cos(angle) * r,
+                    y: centerY + Math.sin(angle) * r,
+                    clusterIndex: -1
+                });
+            }
+
+            // Outer ring
+            const outerRadius = Math.min(width, height) * 0.35;
+            for (let i = 0; i < 90; i++) {
+                const angle = (i / 90) * 2 * Math.PI + (Math.random() * 0.1);
+                const r = outerRadius + (Math.random() - 0.5) * 20;
+                points.push({
+                    x: centerX + Math.cos(angle) * r,
+                    y: centerY + Math.sin(angle) * r,
+                    clusterIndex: -1
+                });
+            }
+
+            totalPointsDisplay.textContent = points.length;
+            draw();
+            stepExplanation.innerHTML = `🛡️ <b>Mẫu Thử Thách cực hạn:</b> 2 Vòng Tròn Đồng Tâm. K-Means thường thất bại vì nó chỉ phân tách theo khối hình học Euclid thẳng (Linear Decision Boundary).`;
+            showToast("Đã sinh vòng tròn đồng tâm", "fa-solid fa-circle-notch");
+        }
+
+        // Animated Canvas Loop (Enables gliding stars animation)
+        function animateLoop() {
+            let changes = false;
+            
+            // Centroids smooth glide interpolation
+            centroids.forEach(c => {
+                const dx = c.targetX - c.x;
+                const dy = c.targetY - c.y;
+                
+                if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+                    c.x += dx * 0.15; // Interpolation speed
+                    c.y += dy * 0.15;
+                    changes = true;
+                } else {
+                    c.x = c.targetX;
+                    c.y = c.targetY;
+                }
+            });
+
+            draw();
+
+            if (changes) {
+                animationFrameId = requestAnimationFrame(animateLoop);
+            } else {
+                isAnimating = false;
+            }
+        }
+
+        function triggerSmoothAnimation() {
+            if (!isAnimating) {
+                isAnimating = true;
+                animateLoop();
+            }
+        }
+
+        // Draw scene elements
+        function draw() {
+            const width = canvas.width / (window.devicePixelRatio || 1) || 800;
+            const height = canvas.height / (window.devicePixelRatio || 1) || 500;
+            if (width === 0 || height === 0) return;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw connection dashed lines
+            if (currentStepPhase === 'assigned' || currentStepPhase === 'updated' || currentStepPhase === 'converged') {
+                points.forEach(p => {
+                    if (p.clusterIndex !== -1 && centroids[p.clusterIndex]) {
+                        const c = centroids[p.clusterIndex];
+                        ctx.beginPath();
+                        ctx.strokeStyle = clusterColors[p.clusterIndex].light;
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([3, 4]);
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(c.x, c.y);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+                });
+            }
+
+            // Draw Data Points
+            points.forEach(p => {
+                ctx.beginPath();
+                const color = p.clusterIndex === -1 ? unassignedColor : clusterColors[p.clusterIndex];
+                ctx.arc(p.x, p.y, 6, 0, 2 * Math.PI);
+                ctx.fillStyle = color.main;
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 1.5;
+                ctx.fill();
+                ctx.stroke();
+            });
+
+            // Draw Centroids
+            centroids.forEach((c, idx) => {
+                const color = clusterColors[idx];
+                
+                // Centroid Glow
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, 18, 0, 2 * Math.PI);
+                ctx.fillStyle = color.light;
+                ctx.fill();
+
+                // Centroid Star
+                drawStar(ctx, c.x, c.y, 5, 12, 5, color.main, '#ffffff');
+            });
+
+            // Calculate WCSS
+            if (points.length > 0 && centroids.length > 0) {
+                const wcss = calculateWCSS();
+                wcssDisplay.textContent = Math.round(wcss).toLocaleString();
+            } else {
+                wcssDisplay.textContent = 'N/A';
+            }
+        }
+
+        function drawStar(context, cx, cy, spikes, outerRadius, innerRadius, fillStyle, strokeStyle) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            let step = Math.PI / spikes;
+
+            context.beginPath();
+            context.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                context.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                context.lineTo(x, y);
+                rot += step;
+            }
+            context.lineTo(cx, cy - outerRadius);
+            context.closePath();
+            context.lineWidth = 2;
+            context.strokeStyle = strokeStyle;
+            context.fillStyle = fillStyle;
+            context.fill();
+            context.stroke();
+        }
+
+        function calculateWCSS() {
+            let sum = 0;
+            points.forEach(p => {
+                if (p.clusterIndex !== -1 && centroids[p.clusterIndex]) {
+                    const c = centroids[p.clusterIndex];
+                    const dSq = Math.pow(p.x - c.x, 2) + Math.pow(p.y - c.y, 2);
+                    sum += dSq;
+                }
+            });
+            return sum;
+        }
+
+        // Initialize centroids (Random vs K-Means++)
+        function initializeCentroids() {
+            if (points.length < k) {
+                showToast("Vui lòng tạo tối thiểu " + k + " điểm dữ liệu trước!", "fa-solid fa-triangle-exclamation text-amber-500");
+                return false;
+            }
+
+            centroids = [];
+
+            if (initMethod === 'random') {
+                // Classic Forgy Random Initialization
+                let chosenIndices = new Set();
+                while (chosenIndices.size < k) {
+                    let rIndex = Math.floor(Math.random() * points.length);
+                    chosenIndices.add(rIndex);
+                }
+
+                let index = 0;
+                chosenIndices.forEach(idx => {
+                    centroids.push({
+                        x: points[idx].x,
+                        y: points[idx].y,
+                        targetX: points[idx].x,
+                        targetY: points[idx].y,
+                        colorIndex: index
+                    });
+                    index++;
+                });
+            } else {
+                // Advanced K-Means++ Initialization Method
+                // 1. Choose first centroid randomly
+                const firstIdx = Math.floor(Math.random() * points.length);
+                centroids.push({
+                    x: points[firstIdx].x,
+                    y: points[firstIdx].y,
+                    targetX: points[firstIdx].x,
+                    targetY: points[firstIdx].y,
+                    colorIndex: 0
+                });
+
+                // 2. Select remaining K-1 centroids
+                for (let c_idx = 1; c_idx < k; c_idx++) {
+                    let distancesSq = [];
+                    let sumDistSq = 0;
+
+                    // Calculate squared distance from each point to nearest chosen centroid
+                    for (let p_idx = 0; p_idx < points.length; p_idx++) {
+                        let minDSq = Infinity;
+                        for (let temp_c = 0; temp_c < centroids.length; temp_c++) {
+                            const dSq = Math.pow(points[p_idx].x - centroids[temp_c].x, 2) + 
+                                        Math.pow(points[p_idx].y - centroids[temp_c].y, 2);
+                            if (dSq < minDSq) minDSq = dSq;
+                        }
+                        distancesSq[p_idx] = minDSq;
+                        sumDistSq += minDSq;
+                    }
+
+                    // Choose next centroid based on weighted probability distribution
+                    let randVal = Math.random() * sumDistSq;
+                    let selectedIdx = points.length - 1;
+                    let cumulativeSum = 0;
+
+                    for (let p_idx = 0; p_idx < points.length; p_idx++) {
+                        cumulativeSum += distancesSq[p_idx];
+                        if (cumulativeSum >= randVal) {
+                            selectedIdx = p_idx;
+                            break;
+                        }
+                    }
+
+                    centroids.push({
+                        x: points[selectedIdx].x,
+                        y: points[selectedIdx].y,
+                        targetX: points[selectedIdx].x,
+                        targetY: points[selectedIdx].y,
+                        colorIndex: c_idx
+                    });
+                }
+            }
+
+            points.forEach(p => p.clusterIndex = -1);
+            iterationCount = 0;
+            iterationsDisplay.textContent = iterationCount;
+
+            currentStepPhase = 'initialized';
+            currentPhaseDisplay.textContent = "Đã khởi tạo";
+            currentPhaseDisplay.className = "font-bold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full text-xs";
+            
+            const initText = initMethod === 'random' ? 'Ngẫu nhiên' : 'K-Means++';
+            stepExplanation.innerHTML = `<b>Bước 1: Khởi tạo (${initText}).</b> Đã chọn thành công <b>${k}</b> tâm cụm sơ khai (Hình ngôi sao). Bấm <b>"Từng bước"</b> để bắt đầu gom các điểm gần nhất về tâm cụm.`;
+            
+            triggerSmoothAnimation();
+            return true;
+        }
+
+        // Step 2: Assign clusters to closest centroid
+        function assignClusters() {
+            let changed = false;
+
+            points.forEach(p => {
+                let minDist = Infinity;
+                let closestIndex = -1;
+
+                centroids.forEach((c, idx) => {
+                    const dist = Math.pow(p.x - c.x, 2) + Math.pow(p.y - c.y, 2);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closestIndex = idx;
+                    }
+                });
+
+                if (p.clusterIndex !== closestIndex) {
+                    p.clusterIndex = closestIndex;
+                    changed = true;
+                }
+            });
+
+            currentStepPhase = 'assigned';
+            currentPhaseDisplay.textContent = "Đang gán cụm";
+            currentPhaseDisplay.className = "font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full text-xs";
+            stepExplanation.innerHTML = `<b>Bước 2: Gán cụm.</b> Phân chia các điểm dữ liệu về tâm cụm hình sao có khoảng cách Euclid ngắn nhất (vẽ nét đứt kết nối). Bạn hãy bấm <b>"Từng bước"</b> tiếp theo để dịch chuyển tâm cụm!`;
+            
+            draw();
+            return changed;
+        }
+
+        // Step 3: Shift centroids to mathematical average position
+        function updateCentroids() {
+            let centroidsMoved = false;
+            let sumX = Array(k).fill(0);
+            let sumY = Array(k).fill(0);
+            let counts = Array(k).fill(0);
+
+            points.forEach(p => {
+                if (p.clusterIndex !== -1) {
+                    sumX[p.clusterIndex] += p.x;
+                    sumY[p.clusterIndex] += p.y;
+                    counts[p.clusterIndex]++;
+                }
+            });
+
+            centroids.forEach((c, idx) => {
+                if (counts[idx] > 0) {
+                    const newX = sumX[idx] / counts[idx];
+                    const newY = sumY[idx] / counts[idx];
+
+                    // Check if target updated
+                    if (Math.abs(c.targetX - newX) > 0.1 || Math.abs(c.targetY - newY) > 0.1) {
+                        centroidsMoved = true;
+                        c.targetX = newX;
+                        c.targetY = newY;
+                    }
+                }
+            });
+
+            iterationCount++;
+            iterationsDisplay.textContent = iterationCount;
+
+            currentStepPhase = 'updated';
+            currentPhaseDisplay.textContent = `Cập nhật #${iterationCount}`;
+            currentPhaseDisplay.className = "font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full text-xs";
+            stepExplanation.innerHTML = `<b>Bước 3: Cập nhật tâm cụm.</b> Các tâm cụm dịch chuyển mượt mà về tọa độ trung bình cộng trọng tâm mới của các điểm thuộc cụm đó.`;
+            
+            triggerSmoothAnimation();
+            return centroidsMoved;
+        }
+
+        // Execution Step director
+        function stepKMeans() {
+            if (points.length === 0) {
+                showToast("Bạn cần tạo dữ liệu trước khi chạy!", "fa-solid fa-triangle-exclamation text-amber-500");
+                return;
+            }
+
+            if (currentStepPhase === 'not_started') {
+                initializeCentroids();
+            } else if (currentStepPhase === 'initialized') {
+                assignClusters();
+            } else if (currentStepPhase === 'assigned') {
+                const moved = updateCentroids();
+                if (!moved) {
+                    currentStepPhase = 'converged';
+                    currentPhaseDisplay.textContent = "Hội tụ tối ưu!";
+                    currentPhaseDisplay.className = "font-bold text-green-700 bg-green-50 px-2.5 py-0.5 rounded-full text-xs";
+                    stepExplanation.innerHTML = `🎉 <b>Thuật toán Đã Hội Tụ!</b> Ở bước cập nhật này, không còn ngôi sao tâm cụm nào di chuyển nữa. Thuật toán chính thức kết thúc hoàn hảo sau ${iterationCount} vòng lặp.`;
+                    stopAutoPlay();
+                }
+            } else if (currentStepPhase === 'updated') {
+                const changed = assignClusters();
+                if (!changed) {
+                    currentStepPhase = 'converged';
+                    currentPhaseDisplay.textContent = "Hội tụ tối ưu!";
+                    currentPhaseDisplay.className = "font-bold text-green-700 bg-green-50 px-2.5 py-0.5 rounded-full text-xs";
+                    stepExplanation.innerHTML = `🎉 <b>Thuật toán Đã Hội Tụ!</b> Mọi điểm dữ liệu đã nằm cố định ở đúng cụm tối ưu, không đổi cụm nữa. K-Means kết thúc.`;
+                    stopAutoPlay();
+                }
+            } else if (currentStepPhase === 'converged') {
+                initializeCentroids();
+            }
+        }
+
+        // Auto Play scheduler controls
+        function togglePlay() {
+            if (playIntervalId) {
+                stopAutoPlay();
+            } else {
+                startAutoPlay();
+            }
+        }
+
+        function startAutoPlay() {
+            if (points.length === 0) {
+                showToast("Hãy tạo các điểm dữ liệu trước!", "fa-solid fa-triangle-exclamation text-amber-500");
+                return;
+            }
+            if (currentStepPhase === 'converged') {
+                resetClustering();
+            }
+
+            const speed = parseInt(speedSlider.value);
+            document.getElementById('play-icon').className = 'fa-solid fa-pause';
+            document.getElementById('play-text').textContent = 'Tạm dừng';
+            
+            stepKMeans();
+
+            playIntervalId = setInterval(() => {
+                stepKMeans();
+            }, speed);
+        }
+
+        function stopAutoPlay() {
+            if (playIntervalId) {
+                clearInterval(playIntervalId);
+                playIntervalId = null;
+                document.getElementById('play-icon').className = 'fa-solid fa-play';
+                document.getElementById('play-text').textContent = 'Tự động chạy';
+            }
+        }
+
+        function resetClustering() {
+            stopAutoPlay();
+            centroids = [];
+            points.forEach(p => p.clusterIndex = -1);
+            iterationCount = 0;
+            iterationsDisplay.textContent = iterationCount;
+            currentStepPhase = 'not_started';
+            currentPhaseDisplay.textContent = "Chưa khởi tạo";
+            currentPhaseDisplay.className = "font-bold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full text-xs";
+            stepExplanation.innerHTML = `Đã thiết lập lại trạng thái. Click <b>"Từng bước"</b> để thực hiện khởi tạo lại với K=${k}.`;
+            draw();
+        }
+
+        function clearCanvas() {
+            stopAutoPlay();
+            points = [];
+            centroids = [];
+            iterationCount = 0;
+            iterationsDisplay.textContent = iterationCount;
+            totalPointsDisplay.textContent = 0;
+            currentStepPhase = 'not_started';
+            currentPhaseDisplay.textContent = "Chưa khởi tạo";
+            currentPhaseDisplay.className = "font-bold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full text-xs";
+            stepExplanation.innerHTML = `Đã xóa sạch Canvas. Hãy nhấp chuột vẽ tự do hoặc chọn "Tạo dữ liệu mẫu nhanh" nhé!`;
+            draw();
+        }
+
+        // ================= INTERACTIVE QUIZ SYSTEM =================
+        const quizData = [
+            {
+                question: "K-Means Clustering thuộc nhóm thuật toán học máy nào dưới đây?",
+                options: [
+                    { text: "Học có giám sát (Supervised Learning)", isCorrect: false },
+                    { text: "Học không giám sát (Unsupervised Learning)", isCorrect: true },
+                    { text: "Học tăng cường (Reinforcement Learning)", isCorrect: false },
+                    { text: "Học bán giám sát (Semi-supervised Learning)", isCorrect: false }
+                ],
+                explanation: "Chính xác! K-Means làm việc trực tiếp trên tập dữ liệu chưa được gán nhãn/phân loại trước đó."
+            },
+            {
+                question: "Khoảng cách nào thường được sử dụng mặc định để đo độ tương đồng trong K-Means?",
+                options: [
+                    { text: "Khoảng cách Manhattan (L1 norm)", isCorrect: false },
+                    { text: "Khoảng cách Cosine (Cosine Similarity)", isCorrect: false },
+                    { text: "Khoảng cách Euclid (Euclidean Distance)", isCorrect: true },
+                    { text: "Khoảng cách Chebyshev", isCorrect: false }
+                ],
+                explanation: "Tuyệt vời! Khoảng cách Euclid hình học thẳng là thước đo phổ biến nhất của thuật toán K-Means tiêu chuẩn."
+            },
+            {
+                question: "Nhược điểm lớn nhất của cách chọn tâm cụm ngẫu nhiên thuần túy (Forgy) là gì?",
+                options: [
+                    { text: "Thuật toán không bao giờ hội tụ", isCorrect: false },
+                    { text: "Dễ bị kẹt ở cực tiểu cục bộ tệ tùy thuộc cách chọn tâm ban đầu", isCorrect: true },
+                    { text: "Thời gian tính toán cực kỳ chậm chạp", isCorrect: false },
+                    { text: "Hạn chế số lượng cụm K tối đa chỉ được bằng 3", isCorrect: false }
+                ],
+                explanation: "Rất chính xác! Việc chọn tâm ngẫu nhiên dễ dẫn tới kết quả gom nhóm không tối ưu. Thuật toán cải tiến K-Means++ ra đời nhằm khắc phục triệt để điểm yếu này!"
+            }
+        ];
+
+        let currentQuizIndex = 0;
+        let score = 0;
+        let hasAnswered = false;
+
+        function loadQuizQuestion() {
+            const currentQuiz = quizData[currentQuizIndex];
+            document.getElementById('quiz-question-num').textContent = `CÂU HỎI ${currentQuizIndex + 1} / ${quizData.length}`;
+            document.getElementById('quiz-question').textContent = currentQuiz.question;
+            
+            // Progress Bar adjustment
+            const pct = ((currentQuizIndex + 1) / quizData.length) * 100;
+            document.getElementById('quiz-progress').style.width = `${pct}%`;
+
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            hasAnswered = false;
+            document.getElementById('btn-next-quiz').classList.add('hidden');
+
+            currentQuiz.options.forEach((opt, idx) => {
+                const button = document.createElement('button');
+                button.className = "w-full text-left p-4 rounded-2xl border border-slate-200 text-sm font-semibold hover:bg-slate-50 tab-transition flex items-center justify-between";
+                button.innerHTML = `
+                    <span>${opt.text}</span>
+                    <i class="fa-regular fa-circle text-slate-300"></i>
+                `;
+                button.onclick = () => selectQuizOption(idx, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectQuizOption(selectedIdx, btnElement) {
+            if (hasAnswered) return;
+            hasAnswered = true;
+
+            const currentQuiz = quizData[currentQuizIndex];
+            const optionsContainer = document.getElementById('quiz-options');
+            const buttons = optionsContainer.getElementsByTagName('button');
+
+            const isCorrect = currentQuiz.options[selectedIdx].isCorrect;
+            
+            // Apply colors based on correctness
+            if (isCorrect) {
+                score++;
+                document.getElementById('quiz-score-indicator').textContent = `Điểm số hiện tại: ${score}/${quizData.length}`;
+                btnElement.className = "w-full text-left p-4 rounded-2xl border border-green-500 bg-green-50 text-green-800 text-sm font-bold tab-transition flex items-center justify-between";
+                btnElement.innerHTML = `
+                    <span>${currentQuiz.options[selectedIdx].text}</span>
+                    <i class="fa-solid fa-circle-check text-green-600 text-lg"></i>
+                `;
+                showToast("Câu trả lời hoàn toàn chính xác!", "fa-solid fa-circle-check text-green-500");
+            } else {
+                btnElement.className = "w-full text-left p-4 rounded-2xl border border-red-500 bg-red-50 text-red-800 text-sm font-semibold tab-transition flex items-center justify-between";
+                btnElement.innerHTML = `
+                    <span>${currentQuiz.options[selectedIdx].text}</span>
+                    <i class="fa-solid fa-circle-xmark text-red-600 text-lg"></i>
+                `;
+                showToast("Rất tiếc, câu trả lời chưa đúng!", "fa-solid fa-circle-xmark text-red-500");
+                
+                // Highlight correct answer in green
+                for (let i = 0; i < buttons.length; i++) {
+                    if (currentQuiz.options[i].isCorrect) {
+                        buttons[i].className = "w-full text-left p-4 rounded-2xl border border-green-500 bg-green-50 text-green-800 text-sm font-bold tab-transition flex items-center justify-between";
+                        buttons[i].innerHTML = `
+                            <span>${currentQuiz.options[i].text}</span>
+                            <i class="fa-solid fa-circle-check text-green-600 text-lg"></i>
+                        `;
+                    }
+                }
+            }
+
+            // Create explanation element under options
+            const expDiv = document.createElement('div');
+            expDiv.className = "p-4 bg-slate-100 rounded-2xl border border-slate-200 text-xs text-slate-600 leading-relaxed font-medium mt-3";
+            expDiv.innerHTML = `💡 <b>Giải thích:</b> ${currentQuiz.explanation}`;
+            optionsContainer.appendChild(expDiv);
+
+            document.getElementById('btn-next-quiz').classList.remove('hidden');
+            if (currentQuizIndex === quizData.length - 1) {
+                document.getElementById('btn-next-quiz').innerHTML = 'Hoàn thành bài tập <i class="fa-solid fa-award ml-1"></i>';
+            }
+        }
+
+        function nextQuizQuestion() {
+            if (currentQuizIndex < quizData.length - 1) {
+                currentQuizIndex++;
+                loadQuizQuestion();
+            } else {
+                // End of quiz, show final summary card
+                const quizBox = document.getElementById('quiz-card');
+                quizBox.innerHTML = `
+                    <div class="text-center py-8 flex flex-col items-center gap-4">
+                        <div class="bg-amber-100 text-amber-600 p-5 rounded-full text-4xl shadow-md">
+                            <i class="fa-solid fa-crown"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-950">Chúc mừng bạn hoàn thành ôn tập!</h3>
+                        <p class="text-sm text-slate-600 max-w-sm">
+                            Bạn đã xuất sắc vượt qua các câu hỏi ôn tập lý thuyết K-Means với số điểm:
+                        </p>
+                        <span class="text-3xl font-black text-indigo-600 font-mono bg-indigo-50 px-6 py-2 rounded-2xl border border-indigo-100">${score} / ${quizData.length}</span>
+                        <button onclick="restartQuiz()" class="mt-4 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md tab-transition">
+                            Làm lại bài kiểm tra
+                        </button>
+                    </div>
+                `;
+                document.getElementById('btn-next-quiz').classList.add('hidden');
+                document.getElementById('quiz-score-indicator').classList.add('hidden');
+            }
+        }
+
+        function restartQuiz() {
+            currentQuizIndex = 0;
+            score = 0;
+            document.getElementById('quiz-score-indicator').classList.remove('hidden');
+            document.getElementById('quiz-score-indicator').textContent = `Điểm số hiện tại: 0/${quizData.length}`;
+            
+            // Re-create internal markup
+            const card = document.getElementById('quiz-card');
+            card.innerHTML = `
+                <span id="quiz-question-num" class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">CÂU HỎI 1 / 3</span>
+                <h3 id="quiz-question" class="font-bold text-slate-900 text-base leading-relaxed"></h3>
+                <div class="flex flex-col gap-2.5 mt-2" id="quiz-options"></div>
+            `;
+            loadQuizQuestion();
+        }
+
+        // Initialize App on load
+        window.onload = function() {
+            // A small delay ensures parent dimensions are correctly computed by browser
+            setTimeout(() => {
+                resizeCanvas();
+                generateGaussianClusters();
+                loadQuizQuestion();
+            }, 100);
+        }
+    </script>
+</body>
+</html>

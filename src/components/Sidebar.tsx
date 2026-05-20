@@ -19,9 +19,9 @@ export default function Sidebar() {
     <aside className="fixed bottom-0 w-full md:w-64 md:h-screen md:sticky md:top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t md:border-t-0 md:border-r border-slate-200 dark:border-slate-800 z-50 flex flex-col transition-colors duration-300">
       <div className="hidden md:flex items-center gap-3 p-6">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-xl">
-          N
+          K
         </div>
-        <span className="font-bold text-xl tracking-tight dark:text-white">Portfolio</span>
+        <span className="font-bold text-xl tracking-tight dark:text-white">KaSao Portfolio</span>
       </div>
       
       <nav className="flex-1 px-4 py-2 md:py-6 flex md:flex-col justify-around md:justify-start gap-2 overflow-x-auto md:overflow-visible">

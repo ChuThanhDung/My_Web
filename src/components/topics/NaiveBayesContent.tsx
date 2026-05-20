@@ -3,83 +3,308 @@ import { useTranslation } from 'react-i18next';
 import { BlockMath, InlineMath } from 'react-katex';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, BookOpen, Calculator, BrainCircuit } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function NaiveBayesContent() {
   const { i18n } = useTranslation();
   const isVi = i18n.language.startsWith('vi');
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const Section = ({ title, children, id }: { title: string, children: React.ReactNode, id: string }) => (
+  const Section = ({ title, children, id, icon }: { title: string, children: React.ReactNode, id: string, icon?: string }) => (
     <section id={id} className="mb-16 scroll-mt-24">
-      <h2 className="text-3xl font-bold mb-6 text-blue-600 dark:text-blue-400 border-b border-slate-200 dark:border-slate-700 pb-3">
-        {title}
-      </h2>
+      <div className="flex items-center gap-3 mb-6 border-b border-slate-200 dark:border-slate-700 pb-3">
+        {icon && (
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center text-white text-base shadow-md">
+            {icon}
+          </div>
+        )}
+        <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+          {title}
+        </h2>
+      </div>
       <div className="space-y-4 text-slate-700 dark:text-slate-300 leading-relaxed">
         {children}
       </div>
     </section>
   );
 
-  const InfoBox = ({ children }: { children: React.ReactNode }) => (
-    <div className="p-5 my-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-r-xl shadow-sm">
-      {children}
-    </div>
-  );
+  const InfoBox = ({ children, variant = 'info' }: { children: React.ReactNode, variant?: 'info' | 'warning' }) => {
+    const isWarn = variant === 'warning';
+    return (
+      <div className={`p-5 my-6 border-l-4 rounded-r-xl shadow-sm ${
+        isWarn 
+          ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500' 
+          : 'bg-blue-50 dark:bg-blue-900/20 border-blue-500'
+      }`}>
+        {children}
+      </div>
+    );
+  };
 
   const pythonCode = `import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.metrics import accuracy_score, classification_report
 
-# 1. Sample Dataset (Spam Classification)
+# 1. Sample text data (Spam vs Ham)
 texts = [
-    "Free money now", "Hi Bob, how are you", 
-    "Win a free ticket", "Meeting at 10am tomorrow",
-    "Claim your free prize", "Project deadline is Friday"
+    "Win a free iPhone now", "Claim your cash prize", "Exclusive discount offer",
+    "Meeting schedule for tomorrow", "Project report deadline", "Lunch with the team"
 ]
-labels = [1, 0, 1, 0, 1, 0] # 1: Spam, 0: Ham
+labels = [1, 1, 1, 0, 0, 0] # 1: Spam, 0: Ham
 
-# 2. Data Preprocessing (Bag of Words)
+# 2. Convert text to word count vectors (Bag of Words)
 vectorizer = CountVectorizer()
 X = vectorizer.fit_transform(texts)
-y = np.array(labels)
 
 # 3. Train/Test Split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.33, random_state=42)
 
-# 4. Model Training
+# 4. Initialize and train Multinomial Naive Bayes
 model = MultinomialNB()
 model.fit(X_train, y_train)
 
-# 5. Prediction
+# 5. Predict on test set
 y_pred = model.predict(X_test)
 
 # 6. Evaluation
 print("Accuracy:", accuracy_score(y_test, y_pred))
-print("Confusion Matrix:\\n", confusion_matrix(y_test, y_pred))
-print("Classification Report:\\n", classification_report(y_test, y_pred))`;
+print("Report:\\n", classification_report(y_test, y_pred))
 
-  const faqs = [
-    {
-      q: isVi ? "Tại sao lại gọi là 'Naive' (Ngây thơ)?" : "Why is it called 'Naive'?",
-      a: isVi ? "Nó được gọi là 'ngây thơ' vì thuật toán giả định một cách mạnh mẽ (và thường là không thực tế) rằng tất cả các đặc trưng (features) đều độc lập với nhau, bất kể chúng có thực sự liên quan trong thực tế hay không." : "It is called 'naive' because the algorithm makes a strong (and often unrealistic) assumption that all features are independent of each other, regardless of whether they actually are in real life."
-    },
-    {
-      q: isVi ? "Khi nào nên sử dụng Naive Bayes?" : "When should we use it?",
-      a: isVi ? "Rất thích hợp cho phân loại văn bản (Spam filtering, Sentiment analysis), các bài toán có số lượng chiều (features) lớn, và khi cần một mô hình baseline nhanh chóng." : "It is highly suitable for text classification (Spam filtering, Sentiment analysis), high-dimensional datasets, and when you need a fast baseline model."
-    },
-    {
-      q: isVi ? "Sự khác biệt giữa Gaussian và Multinomial?" : "Difference between Gaussian and Multinomial?",
-      a: isVi ? "Gaussian NB dùng cho dữ liệu liên tục tuân theo phân phối chuẩn. Multinomial NB dùng cho dữ liệu rời rạc (như đếm số lượng từ trong văn bản)." : "Gaussian NB is used for continuous data that follows a normal distribution. Multinomial NB is used for discrete counts (like word frequencies in text)."
-    },
-    {
-      q: isVi ? "Tại sao nó hoạt động tốt cho NLP?" : "Why does it work well for NLP?",
-      a: isVi ? "Mặc dù giả định độc lập thường bị vi phạm trong ngôn ngữ (các từ thường đi kèm nhau), Naive Bayes vẫn có khả năng đẩy xác suất của lớp đúng lên cao nhất, dẫn đến kết quả phân loại rất tốt mà không cần ước lượng chính xác tuyệt đối xác suất." : "Even though the independence assumption is usually violated in language (words appear together), Naive Bayes is still able to push the correct class probability to be the highest, resulting in excellent classification accuracy without needing perfectly calibrated probabilities."
-    }
-  ];
+# Test with new data
+new_email = ["Free cash prize for the winner!"]
+X_new = vectorizer.transform(new_email)
+print("Prediction for new email:", "Spam" if model.predict(X_new)[0] == 1 else "Ham")`;
+
+  /* ───────────── Spam Classifier Interactive Simulator ───────────── */
+  function SpamClassifierDemo() {
+    const [inputText, setInputText] = useState('');
+    const [result, setResult] = useState<{ isSpam: boolean, confidence: number, breakdown: {word: string, pSpam: number, pHam: number}[] } | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+    // Simplified vocab with predefined likelihood probabilities P(word | class)
+    const vocab: Record<string, {spam: number, ham: number}> = {
+      'win': { spam: 0.15, ham: 0.01 },
+      'free': { spam: 0.20, ham: 0.02 },
+      'prize': { spam: 0.10, ham: 0.01 },
+      'click': { spam: 0.12, ham: 0.03 },
+      'cash': { spam: 0.08, ham: 0.01 },
+      'winner': { spam: 0.09, ham: 0.005 },
+      'urgent': { spam: 0.05, ham: 0.05 },
+      'buy': { spam: 0.07, ham: 0.02 },
+      'discount': { spam: 0.06, ham: 0.01 },
+      'meeting': { spam: 0.01, ham: 0.15 },
+      'project': { spam: 0.01, ham: 0.12 },
+      'deadline': { spam: 0.01, ham: 0.10 },
+      'team': { spam: 0.02, ham: 0.14 },
+      'report': { spam: 0.01, ham: 0.11 },
+      'schedule': { spam: 0.01, ham: 0.09 },
+      'lunch': { spam: 0.02, ham: 0.08 }
+    };
+    
+    const P_SPAM = 0.4;
+    const P_HAM = 0.6;
+    const SMOOTHING = 0.001; // Laplace smoothing fallback
+
+    const analyzeText = () => {
+      if (!inputText.trim()) return;
+      setIsAnalyzing(true);
+      setResult(null);
+      
+      setTimeout(() => {
+        const words = inputText.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
+        
+        let logPSpam = Math.log(P_SPAM);
+        let logPHam = Math.log(P_HAM);
+        const breakdown: {word: string, pSpam: number, pHam: number}[] = [];
+        
+        words.forEach(word => {
+          if (word.length < 2) return;
+          const stats = vocab[word] || { spam: SMOOTHING, ham: SMOOTHING };
+          // For visualization, only show words we know
+          if (vocab[word]) {
+            breakdown.push({ word, pSpam: stats.spam, pHam: stats.ham });
+          }
+          logPSpam += Math.log(stats.spam);
+          logPHam += Math.log(stats.ham);
+        });
+        
+        // Convert log probs back to probabilities (using exp trick to avoid underflow)
+        const maxLog = Math.max(logPSpam, logPHam);
+        const probSpam = Math.exp(logPSpam - maxLog);
+        const probHam = Math.exp(logPHam - maxLog);
+        const normalizedSpam = probSpam / (probSpam + probHam);
+        
+        // Sort breakdown by strongest spam indicators
+        breakdown.sort((a, b) => (b.pSpam / (b.pHam + 0.0001)) - (a.pSpam / (a.pHam + 0.0001)));
+        
+        setResult({
+          isSpam: normalizedSpam > 0.5,
+          confidence: normalizedSpam > 0.5 ? normalizedSpam : 1 - normalizedSpam,
+          breakdown: breakdown.slice(0, 5) // top 5 words
+        });
+        setIsAnalyzing(false);
+      }, 600);
+    };
+
+    const samples = [
+      "Win a free iPhone! Click here to claim your cash prize",
+      "Meeting schedule for tomorrow regarding project deadline",
+      "Urgent: Buy now to get exclusive discount as winner",
+      "Lunch with the team after report submission"
+    ];
+
+    return (
+      <div className="rounded-3xl overflow-hidden border border-slate-700 shadow-2xl bg-slate-900 mt-6">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm">
+          <div className="flex gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-red-500" />
+            <span className="w-3 h-3 rounded-full bg-yellow-500" />
+            <span className="w-3 h-3 rounded-full bg-green-500" />
+          </div>
+          <span className="text-xs font-semibold text-slate-400 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+            {isVi ? 'Spam Filter Demo' : 'Spam Filter Demo'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 text-white">
+          <div className="border-b lg:border-b-0 lg:border-r border-slate-800 p-6 flex flex-col gap-4">
+            <div>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">
+                {isVi ? 'Nhập nội dung email/tin nhắn' : 'Enter email/message content'}
+              </label>
+              <textarea 
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder={isVi ? "Nhập một câu vào đây..." : "Type something here..."}
+                className="w-full h-32 bg-slate-800/50 border border-slate-700 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none placeholder-slate-500 text-slate-200"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                {isVi ? 'Mẫu gợi ý' : 'Suggestions'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {samples.map((sample, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => setInputText(sample)}
+                    className="text-left text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg border border-slate-700 transition-colors truncate max-w-[200px]"
+                  >
+                    "{sample}"
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button 
+              onClick={analyzeText}
+              disabled={isAnalyzing || !inputText.trim()}
+              className="mt-auto w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 text-white text-sm font-bold rounded-xl border border-blue-500 transition-colors shadow-lg shadow-blue-900/50 flex justify-center items-center gap-2"
+            >
+              {isAnalyzing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  {isVi ? 'Đang phân tích...' : 'Analyzing...'}
+                </>
+              ) : (
+                isVi ? 'Phân loại bằng Naive Bayes' : 'Classify with Naive Bayes'
+              )}
+            </button>
+          </div>
+
+          <div className="p-6 bg-slate-800/20 relative min-h-[300px] flex flex-col items-center justify-center">
+            {!result && !isAnalyzing && (
+              <div className="text-center text-slate-500 flex flex-col items-center">
+                <svg className="w-16 h-16 mb-4 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <p className="text-sm">{isVi ? 'Nhập tin nhắn và ấn Phân loại để xem kết quả' : 'Enter message and click Classify to see results'}</p>
+              </div>
+            )}
+
+            {isAnalyzing && (
+              <div className="text-blue-400 flex flex-col items-center">
+                <div className="w-10 h-10 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+                <p className="text-sm font-medium animate-pulse">{isVi ? 'Tính toán xác suất...' : 'Calculating probabilities...'}</p>
+              </div>
+            )}
+
+            {result && !isAnalyzing && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full flex flex-col items-center h-full justify-start"
+              >
+                <div className={`px-6 py-2 rounded-full font-black text-2xl tracking-widest uppercase border-2 shadow-xl mb-6 ${
+                  result.isSpam 
+                    ? 'bg-rose-500/20 border-rose-500 text-rose-400 shadow-rose-900/50' 
+                    : 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-emerald-900/50'
+                }`}>
+                  {result.isSpam ? 'SPAM' : 'NOT SPAM (HAM)'}
+                </div>
+
+                <div className="w-full max-w-sm mb-8">
+                  <div className="flex justify-between text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
+                    <span>Confidence</span>
+                    <span>{(result.confidence * 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${result.confidence * 100}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      className={`h-full ${result.isSpam ? 'bg-gradient-to-r from-rose-600 to-rose-400' : 'bg-gradient-to-r from-emerald-600 to-emerald-400'}`}
+                    />
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 pb-2 border-b border-slate-700/50">
+                    {isVi ? 'Từ khóa phân tích' : 'Keyword Analysis'}
+                  </p>
+                  
+                  {result.breakdown.length === 0 ? (
+                    <p className="text-xs text-slate-500 italic text-center py-4">
+                      {isVi ? 'Không tìm thấy từ khóa mạnh nào.' : 'No strong keywords found.'}
+                    </p>
+                  ) : (
+                    <div className="space-y-3 w-full">
+                      {result.breakdown.map((item, idx) => {
+                        const isSpamIndicator = item.pSpam > item.pHam;
+                        const ratio = isSpamIndicator ? (item.pSpam / item.pHam) : (item.pHam / item.pSpam);
+                        
+                        return (
+                          <div key={idx} className="flex items-center gap-3 w-full bg-slate-800/40 p-2.5 rounded-lg border border-slate-700/50">
+                            <span className="text-sm font-mono text-slate-300 w-24 truncate">{item.word}</span>
+                            <div className="flex-1 flex items-center gap-2">
+                               {isSpamIndicator ? (
+                                 <>
+                                   <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 w-12 text-center">+Spam</span>
+                                   <div className="h-1.5 bg-rose-500/50 rounded-full" style={{ width: `${Math.min(ratio * 5, 100)}%` }} />
+                                 </>
+                               ) : (
+                                 <>
+                                   <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 w-12 text-center">+Ham</span>
+                                   <div className="h-1.5 bg-emerald-500/50 rounded-full" style={{ width: `${Math.min(ratio * 5, 100)}%` }} />
+                                 </>
+                               )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
@@ -87,413 +312,202 @@ print("Classification Report:\\n", classification_report(y_test, y_pred))`;
         
         {/* 1. Hero Section */}
         <section id="hero" className="mb-16 scroll-mt-24">
-          <div className="p-10 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-800 text-white shadow-2xl relative overflow-hidden">
+          <div className="p-10 rounded-3xl bg-gradient-to-br from-blue-900 via-sky-800 to-cyan-900 text-white shadow-2xl relative overflow-hidden border border-blue-700/50">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-400/20 rounded-full blur-2xl transform -translate-x-1/2 translate-y-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-400/20 rounded-full blur-2xl transform -translate-x-1/2 translate-y-1/2"></div>
             
             <div className="relative z-10">
-              <h1 className="text-4xl md:text-6xl font-extrabold mb-4">Naive Bayes</h1>
-              <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-2xl">
+              <span className="inline-block text-xs font-bold uppercase tracking-widest text-sky-300 mb-3 bg-blue-800/60 px-3 py-1 rounded-full border border-blue-700">
+                {isVi ? 'Học có giám sát' : 'Supervised Learning'}
+              </span>
+              <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Naive Bayes</h1>
+              <p className="text-xl text-blue-100 mb-8 max-w-2xl leading-relaxed">
                 {isVi 
-                  ? "Một thuật toán phân loại dựa trên xác suất cực kỳ mạnh mẽ, đơn giản và hiệu quả, được xây dựng dựa trên Định lý Bayes."
-                  : "A remarkably powerful, simple, and efficient probabilistic classification algorithm built on Bayes' Theorem."}
+                  ? "Thuật toán kinh điển dựa trên Định lý Bayes. Đơn giản, tốc độ chớp nhoáng và cực kỳ hiệu quả trong phân loại văn bản, lọc thư rác."
+                  : "A classic algorithm based on Bayes' Theorem. Simple, lightning-fast, and extremely effective for text classification and spam filtering."}
               </p>
               
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl mb-8 max-w-xl">
-                <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-blue-200" />
-                  {isVi ? "Tóm tắt nhanh" : "Quick Summary"}
-                </h3>
-                <p className="text-blue-50">
-                  {isVi 
-                    ? "Sử dụng xác suất có điều kiện để dự đoán nhãn của dữ liệu. Giả định ngây thơ rằng các đặc trưng là độc lập với nhau."
-                    : "Uses conditional probability to predict data labels. Naively assumes that all features are independent of one another."}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-4">
-                <a href="#math" className="px-6 py-3 bg-white text-blue-700 font-bold rounded-xl hover:bg-blue-50 transition-colors shadow-lg">
-                  {isVi ? "Khám phá Toán học" : "Explore Math"}
-                </a>
-                <a href="#python" className="px-6 py-3 bg-blue-700/50 text-white font-bold border border-blue-400/30 rounded-xl hover:bg-blue-700/70 transition-colors">
-                  {isVi ? "Xem Code Python" : "View Python Code"}
-                </a>
+              <div className="flex flex-wrap gap-3 mt-5">
+                {['Probability', 'Bayes Theorem', 'Fast Training', 'NLP'].map(tag => (
+                  <span key={tag} className="text-xs font-semibold text-blue-200 bg-blue-700/50 px-3 py-1 rounded-full border border-blue-600/50">
+                    {tag}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
         {/* 2. Introduction */}
-        <Section id="intro" title={isVi ? "2. Giới thiệu" : "2. Introduction"}>
+        <Section id="intro" title={isVi ? "Giới thiệu" : "Introduction"} icon="🔍">
           <p>
             {isVi 
-              ? "Naive Bayes là một trong những thuật toán phân loại đơn giản nhưng hiệu quả nhất trong Machine Learning. Nó dựa trên định lý Bayes với một giả định 'ngây thơ' (naive) cực kỳ quan trọng: tất cả các đặc trưng (features) ảnh hưởng đến kết quả một cách hoàn toàn độc lập với nhau."
-              : "Naive Bayes is one of the simplest yet most effective classification algorithms in Machine Learning. It relies on Bayes' Theorem with a crucial 'naive' assumption: all features influence the outcome completely independently of each other."}
+              ? "Naive Bayes là một họ thuật toán phân loại dựa trên xác suất, cốt lõi là Định lý Bayes. Nó được gọi là 'Naive' (ngây thơ) vì nó đặt ra một giả định rất mạnh: Tất cả các đặc trưng (features) đều độc lập với nhau, nghĩa là sự xuất hiện của một đặc trưng không ảnh hưởng đến sự xuất hiện của đặc trưng khác."
+              : "Naive Bayes is a family of probabilistic classification algorithms based on Bayes' Theorem. It is called 'Naive' because it makes a very strong assumption: All features are independent of each other, meaning the presence of one feature does not affect the presence of another."}
           </p>
           <p>
             {isVi
-              ? "Tuy giả định này hiếm khi đúng trong thế giới thực, Naive Bayes vẫn hoạt động vượt trội, đặc biệt trong các bài toán Xử lý ngôn ngữ tự nhiên (NLP) như lọc thư rác (spam filtering) và phân tích cảm xúc (sentiment analysis)."
-              : "Although this assumption is rarely true in the real world, Naive Bayes performs exceptionally well, especially in Natural Language Processing (NLP) tasks like spam filtering and sentiment analysis."}
+              ? "Dù giả định này hiếm khi đúng trong thực tế, Naive Bayes vẫn hoạt động cực kỳ tốt, đặc biệt là với dữ liệu văn bản (NLP) có số chiều rất lớn."
+              : "Even though this assumption is rarely true in reality, Naive Bayes still performs exceptionally well, especially with text data (NLP) that has high dimensionality."}
           </p>
         </Section>
 
         {/* 3. Bayes Theorem */}
-        <Section id="bayes" title={isVi ? "3. Định lý Bayes" : "3. Bayes Theorem"}>
+        <Section id="bayes" title={isVi ? "Định lý Bayes (Bayes' Theorem)" : "Bayes' Theorem"} icon="📐">
           <p>
             {isVi 
-              ? "Định lý Bayes mô tả xác suất của một sự kiện, dựa trên kiến thức trước đó về các điều kiện có thể liên quan đến sự kiện đó:"
-              : "Bayes' Theorem describes the probability of an event, based on prior knowledge of conditions that might be related to the event:"}
+              ? "Định lý Bayes mô tả xác suất của một sự kiện dựa trên các kiến thức đã biết trước đó có liên quan đến sự kiện. Công thức cơ bản:"
+              : "Bayes' theorem describes the probability of an event based on prior knowledge of conditions that might be related to the event. The basic formula is:"}
           </p>
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 my-6 flex justify-center">
-            <BlockMath math="P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}" />
+          <div className="bg-slate-900 p-6 rounded-2xl my-6 flex justify-center text-white overflow-x-auto shadow-inner">
+            <BlockMath math="P(C|X) = \frac{P(X|C) \cdot P(C)}{P(X)}" />
           </div>
-          <ul className="list-disc list-inside space-y-2 ml-4">
-            <li><InlineMath math="P(A|B)" />: <strong>{isVi ? "Xác suất hậu nghiệm (Posterior)" : "Posterior probability"}</strong> {isVi ? "- Xác suất xảy ra A khi B đã xảy ra." : "- Probability of A given that B has occurred."}</li>
-            <li><InlineMath math="P(B|A)" />: <strong>{isVi ? "Khả năng (Likelihood)" : "Likelihood"}</strong> {isVi ? "- Xác suất xảy ra B khi A đã xảy ra." : "- Probability of B given that A has occurred."}</li>
-            <li><InlineMath math="P(A)" />: <strong>{isVi ? "Xác suất tiên nghiệm (Prior)" : "Prior probability"}</strong> {isVi ? "- Xác suất xảy ra A độc lập." : "- Initial probability of A."}</li>
-            <li><InlineMath math="P(B)" />: <strong>{isVi ? "Xác suất cận biên (Marginal)" : "Marginal probability"}</strong> {isVi ? "- Xác suất xảy ra B." : "- Probability of B occurring."}</li>
+          <p className="text-sm mb-4">
+            {isVi ? "Trong Machine Learning, ta áp dụng như sau:" : "In Machine Learning, we apply it as follows:"}
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-slate-700 dark:text-slate-300 ml-4">
+            <li><InlineMath math="P(C|X)" />: <strong>Posterior Probability</strong> - {isVi ? "Xác suất rớt vào lớp C khi đã biết đặc trưng X (Điều ta cần dự đoán)." : "Probability of class C given feature X (What we want to predict)."}</li>
+            <li><InlineMath math="P(X|C)" />: <strong>Likelihood</strong> - {isVi ? "Xác suất thấy đặc trưng X nếu dữ liệu thực sự thuộc lớp C." : "Probability of feature X given that the class is C."}</li>
+            <li><InlineMath math="P(C)" />: <strong>Prior Probability</strong> - {isVi ? "Xác suất tổng quát của lớp C trong tập dữ liệu." : "General probability of class C in the dataset."}</li>
+            <li><InlineMath math="P(X)" />: <strong>Evidence</strong> - {isVi ? "Xác suất của đặc trưng X." : "Probability of feature X."}</li>
           </ul>
         </Section>
 
-        {/* 4. Types of Naive Bayes */}
-        <Section id="types" title={isVi ? "4. Các loại Naive Bayes" : "4. Types of Naive Bayes"}>
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Gaussian */}
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-              <h4 className="font-bold text-lg text-blue-600 dark:text-blue-400 mb-2">Gaussian NB</h4>
-              <p className="text-sm mb-4">
-                {isVi ? "Giả định dữ liệu liên tục tuân theo phân phối chuẩn (hình chuông)." : "Assumes continuous data follows a normal (Gaussian) distribution."}
-              </p>
-              <div className="text-xs font-semibold bg-slate-100 dark:bg-slate-700 p-2 rounded">
-                {isVi ? "Dùng cho: Dữ liệu liên tục (VD: Chiều cao, Cân nặng)" : "Use for: Continuous data (e.g., Height, Weight)"}
+        {/* 4. Naive Assumption & Math */}
+        <Section id="math" title={isVi ? "Giả định 'Ngây thơ' & Toán học" : "Naive Assumption & Math"} icon="🧠">
+          <p>
+            {isVi
+              ? "Với một mẫu dữ liệu có nhiều đặc trưng $X = (x_1, x_2, ..., x_n)$, việc tính chính xác $P(x_1, x_2, ..., x_n | C)$ là không thể vì nó cần quá nhiều dữ liệu. Thay vào đó, thuật toán đưa ra giả định ngây thơ rằng các $x_i$ độc lập với nhau:"
+              : "With a sample having multiple features $X = (x_1, x_2, ..., x_n)$, calculating the exact $P(x_1, x_2, ..., x_n | C)$ is impossible as it requires too much data. Instead, the algorithm makes the naive assumption that all $x_i$ are independent:"}
+          </p>
+          <div className="bg-slate-900 rounded-2xl p-6 text-white space-y-4 shadow-inner my-6">
+            <BlockMath math="P(X|C) \approx P(x_1|C) \cdot P(x_2|C) \cdot ... \cdot P(x_n|C) = \prod_{i=1}^{n} P(x_i|C)" />
+            <div className="border-t border-slate-700/50 pt-4">
+              <div className="text-sm text-slate-400 mb-2 font-semibold">
+                {isVi ? "Công thức phân loại dự đoán lớp c có xác suất cao nhất:" : "Classification formula predicts the class c with highest probability:"}
               </div>
-            </div>
-            {/* Multinomial */}
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-              <h4 className="font-bold text-lg text-blue-600 dark:text-blue-400 mb-2">Multinomial NB</h4>
-              <p className="text-sm mb-4">
-                {isVi ? "Dùng cho dữ liệu tần suất (đếm số lần xuất hiện của sự kiện)." : "Used for frequency data (counts of occurrences)."}
-              </p>
-              <div className="text-xs font-semibold bg-slate-100 dark:bg-slate-700 p-2 rounded">
-                {isVi ? "Dùng cho: Phân loại văn bản, đếm từ" : "Use for: Text classification, word counts"}
-              </div>
-            </div>
-            {/* Bernoulli */}
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-              <h4 className="font-bold text-lg text-blue-600 dark:text-blue-400 mb-2">Bernoulli NB</h4>
-              <p className="text-sm mb-4">
-                {isVi ? "Dành cho dữ liệu nhị phân (chỉ có 0 và 1)." : "Designed for binary features (only 0s and 1s)."}
-              </p>
-              <div className="text-xs font-semibold bg-slate-100 dark:bg-slate-700 p-2 rounded">
-                {isVi ? "Dùng cho: Có/Không xuất hiện từ trong câu" : "Use for: Word presence/absence in document"}
-              </div>
+              <BlockMath math="\hat{y} = \arg\max_{c} P(c) \prod_{i=1}^{n} P(x_i|c)" />
             </div>
           </div>
-        </Section>
-
-        {/* 5. Mathematical Explanation */}
-        <Section id="math" title={isVi ? "5. Giải thích Toán học (Giả định Độc lập)" : "5. Mathematical Explanation"}>
-          <p>
-            {isVi ? "Trong bối cảnh học máy, chúng ta muốn tính xác suất của một lớp " : "In machine learning, we want to calculate the probability of a class "}
-            <InlineMath math="y" />
-            {isVi ? " khi biết tập hợp các đặc trưng " : " given a set of features "}
-            <InlineMath math="X = (x_1, x_2, ..., x_n)" />:
-          </p>
-          <BlockMath math="P(y | x_1, ..., x_n) = \frac{P(x_1, ..., x_n | y) P(y)}{P(x_1, ..., x_n)}" />
-          <p>
-            {isVi 
-              ? "Nhờ giả định 'Ngây thơ' (độc lập có điều kiện), ta có thể tách xác suất gộp thành tích các xác suất đơn lẻ:" 
-              : "Due to the 'Naive' (conditional independence) assumption, we can split the joint probability into a product of individual probabilities:"}
-          </p>
-          <BlockMath math="P(x_1, ..., x_n | y) \approx P(x_1|y) \times P(x_2|y) \times ... \times P(x_n|y) = \prod_{i=1}^n P(x_i|y)" />
-          <p>
-            {isVi ? "Từ đó, phương trình dự đoán lớp mục tiêu (loại bỏ mẫu số vì nó giống nhau cho mọi lớp) trở thành:" : "Thus, the prediction equation for the target class (dropping the denominator as it's constant for all classes) becomes:"}
-          </p>
-          <BlockMath math="\hat{y} = \arg\max_y P(y) \prod_{i=1}^n P(x_i|y)" />
-        </Section>
-
-        {/* 6. Training Process */}
-        <Section id="training" title={isVi ? "6. Quá trình Huấn luyện (Training)" : "6. Training Process"}>
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-center p-8 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-            <div className="text-center p-4 bg-slate-100 dark:bg-slate-700 rounded-xl w-40">
-              <Calculator className="w-8 h-8 mx-auto mb-2 text-blue-500" />
-              <div className="font-bold text-sm">{isVi ? "1. Tính Prior P(y)" : "1. Calc Prior P(y)"}</div>
-              <div className="text-xs text-slate-500 mt-1">{isVi ? "Tỉ lệ nhãn y" : "Ratio of label y"}</div>
-            </div>
-            <div className="text-slate-400 font-bold text-xl">→</div>
-            <div className="text-center p-4 bg-slate-100 dark:bg-slate-700 rounded-xl w-40">
-              <BrainCircuit className="w-8 h-8 mx-auto mb-2 text-indigo-500" />
-              <div className="font-bold text-sm">{isVi ? "2. Tính Likelihood" : "2. Calc Likelihood"}</div>
-              <div className="text-xs text-slate-500 mt-1"><InlineMath math="P(x_i|y)" /></div>
-            </div>
-            <div className="text-slate-400 font-bold text-xl">→</div>
-            <div className="text-center p-4 bg-blue-500 text-white rounded-xl w-40 shadow-lg shadow-blue-500/30">
-              <BookOpen className="w-8 h-8 mx-auto mb-2 text-blue-100" />
-              <div className="font-bold text-sm">{isVi ? "3. Dự đoán" : "3. Predict"}</div>
-              <div className="text-xs text-blue-100 mt-1">{isVi ? "Nhân các xác suất" : "Multiply probabilities"}</div>
-            </div>
-          </div>
-        </Section>
-
-        {/* 7. Example Classification */}
-        <Section id="example" title={isVi ? "7. Ví dụ Phân loại (Spam Email)" : "7. Example Classification"}>
-          <p className="mb-4">
-            {isVi 
-              ? "Giả sử ta muốn dự đoán email có chứa từ 'Free' và 'Money' có phải là Spam hay không."
-              : "Suppose we want to predict if an email containing 'Free' and 'Money' is Spam or not."}
-          </p>
-          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-100 dark:bg-slate-800">
-                <tr>
-                  <th className="p-4 font-semibold">Word</th>
-                  <th className="p-4 font-semibold">P(Word | Spam)</th>
-                  <th className="p-4 font-semibold">P(Word | Ham)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                <tr className="bg-white dark:bg-slate-900">
-                  <td className="p-4">Free</td><td className="p-4">0.7</td><td className="p-4">0.1</td>
-                </tr>
-                <tr className="bg-slate-50 dark:bg-slate-800/50">
-                  <td className="p-4">Money</td><td className="p-4">0.6</td><td className="p-4">0.05</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-4 p-4 bg-slate-100 dark:bg-slate-800 rounded-xl font-mono text-sm">
-            <p>P(Spam) = 0.5, P(Ham) = 0.5</p>
-            <p className="mt-2 text-red-600 dark:text-red-400">Score(Spam) = P(Spam) * P("Free"|Spam) * P("Money"|Spam) = 0.5 * 0.7 * 0.6 = 0.21</p>
-            <p className="mt-1 text-green-600 dark:text-green-400">Score(Ham) = P(Ham) * P("Free"|Ham) * P("Money"|Ham) = 0.5 * 0.1 * 0.05 = 0.0025</p>
-            <p className="mt-3 font-bold">{isVi ? "→ Kết luận: Là Spam (0.21 > 0.0025)" : "→ Conclusion: It is Spam (0.21 > 0.0025)"}</p>
-          </div>
-        </Section>
-
-        {/* 8. Advantages and Disadvantages */}
-        <Section id="pros-cons" title={isVi ? "8. Ưu điểm và Nhược điểm" : "8. Advantages and Disadvantages"}>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-5 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
-              <h4 className="font-bold text-green-700 dark:text-green-400 mb-3">{isVi ? "Ưu điểm" : "Advantages"}</h4>
-              <ul className="list-disc list-inside space-y-2 text-sm text-green-800 dark:text-green-300">
-                <li>{isVi ? "Huấn luyện và dự đoán cực kỳ nhanh." : "Extremely fast training and prediction."}</li>
-                <li>{isVi ? "Hoạt động cực tốt với số lượng chiều dữ liệu lớn (như text)." : "Works exceptionally well with high-dimensional data (like text)."}</li>
-                <li>{isVi ? "Không cần lượng dữ liệu huấn luyện quá lớn." : "Doesn't require a massive amount of training data."}</li>
-                <li>{isVi ? "Không nhạy cảm với các đặc trưng không liên quan." : "Not highly sensitive to irrelevant features."}</li>
-              </ul>
-            </div>
-            <div className="p-5 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
-              <h4 className="font-bold text-red-700 dark:text-red-400 mb-3">{isVi ? "Nhược điểm" : "Disadvantages"}</h4>
-              <ul className="list-disc list-inside space-y-2 text-sm text-red-800 dark:text-red-300">
-                <li>{isVi ? "Giả định các đặc trưng độc lập là không thực tế." : "The assumption of independent features is unrealistic."}</li>
-                <li>{isVi ? "Gặp vấn đề Zero Probability (Xác suất bằng 0) nếu từ chưa từng xuất hiện." : "Suffers from the Zero Probability problem if a feature never appears."}</li>
-                <li>{isVi ? "Khả năng ước lượng xác suất (predict_proba) khá tệ." : "Produces poor probability estimates (predict_proba is not well-calibrated)."}</li>
-              </ul>
-            </div>
-          </div>
-        </Section>
-
-        {/* 9. Laplace Smoothing */}
-        <Section id="laplace" title={isVi ? "9. Làm trơn Laplace (Laplace Smoothing)" : "9. Laplace Smoothing"}>
-          <p>
-            {isVi 
-              ? "Nếu một từ (đặc trưng) xuất hiện trong tập kiểm tra nhưng chưa từng xuất hiện trong tập huấn luyện, xác suất của nó sẽ là 0. Vì Naive Bayes nhân các xác suất lại với nhau, chỉ cần 1 số 0 sẽ làm kết quả toàn bộ câu bằng 0. Laplace Smoothing giải quyết vấn đề này:"
-              : "If a feature appears in the test set but never in the training set, its probability is 0. Since Naive Bayes multiplies probabilities, a single 0 wipes out the whole equation. Laplace Smoothing solves this:"}
-          </p>
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 my-4 flex justify-center">
-            <BlockMath math="P(x_i | y) = \frac{N_{x_i, y} + \alpha}{N_y + \alpha \cdot d}" />
-          </div>
+          
           <InfoBox>
-            <p className="text-sm">
-              {isVi 
-                ? "Với α = 1 (Laplace), d là kích thước từ điển. Điều này đảm bảo không có xác suất nào bị tụt xuống 0 hoàn toàn."
-                : "Where α = 1 (Laplace), and d is vocabulary size. This ensures no probability ever drops strictly to 0."}
-            </p>
+            <strong>{isVi ? "Logarithmic Trick (Mẹo dùng Log)" : "Logarithmic Trick"}:</strong> 
+            <br />
+            {isVi 
+              ? "Việc nhân nhiều số xác suất rất nhỏ (VD: 0.01 * 0.005 * 0.001) sẽ gây ra lỗi tràn số dưới (underflow) trên máy tính. Giải pháp là sử dụng Logarit để biến phép nhân thành phép cộng, giúp tính toán cực kỳ ổn định."
+              : "Multiplying many small probability numbers causes floating-point underflow. The solution is to use Logarithms to convert multiplication into addition, ensuring stable calculation."}
+            <div className="mt-2 text-center text-slate-800 dark:text-slate-200 bg-white/50 dark:bg-slate-800/50 p-2 rounded">
+              <InlineMath math="\arg\max_{c} \left[ \log P(c) + \sum_{i=1}^{n} \log P(x_i|c) \right]" />
+            </div>
           </InfoBox>
         </Section>
 
-        {/* 10. Visualization */}
-        <Section id="visualization" title={isVi ? "10. Trực quan hoá" : "10. Visualization Section"}>
-           <div className="flex flex-col md:flex-row gap-6 items-center justify-center bg-slate-50 dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-700">
-              <div className="flex flex-col items-center">
-                <span className="font-bold mb-4">Gaussian Distribution (Class A vs B)</span>
-                <svg width="300" height="150" viewBox="0 0 300 150">
-                  {/* Axes */}
-                  <line x1="20" y1="130" x2="280" y2="130" stroke="currentColor" strokeWidth="2" className="text-slate-400" />
-                  
-                  {/* Curve 1 (Red) */}
-                  <path d="M 20 130 Q 80 130 100 40 Q 120 130 180 130" fill="rgba(239, 68, 68, 0.2)" stroke="#ef4444" strokeWidth="3" />
-                  <text x="100" y="25" fill="#ef4444" fontSize="14" textAnchor="middle" fontWeight="bold">Class A</text>
-                  
-                  {/* Curve 2 (Blue) */}
-                  <path d="M 120 130 Q 180 130 200 60 Q 220 130 280 130" fill="rgba(59, 130, 246, 0.2)" stroke="#3b82f6" strokeWidth="3" />
-                  <text x="200" y="45" fill="#3b82f6" fontSize="14" textAnchor="middle" fontWeight="bold">Class B</text>
-
-                  {/* Data Point */}
-                  <line x1="160" y1="130" x2="160" y2="80" stroke="currentColor" strokeDasharray="4,4" className="text-slate-500" />
-                  <circle cx="160" cy="130" r="4" fill="#000" className="dark:fill-white" />
-                  <text x="160" y="145" fill="currentColor" fontSize="12" textAnchor="middle" className="text-slate-600 dark:text-slate-300">New Point x</text>
-                </svg>
-              </div>
-           </div>
-           <p className="text-center mt-3 text-sm text-slate-500">
-             {isVi ? "Dựa vào độ cao của đồ thị phân phối tại điểm x, ta xác định x thuộc về Class B vì đường màu xanh cao hơn đường màu đỏ tại x." : "Based on the height of the distributions at point x, we assign x to Class B because the blue curve is higher than the red curve."}
-           </p>
+        {/* 5. Interactive Simulator */}
+        <Section id="simulator" title={isVi ? "Mô phỏng tương tác: Lọc Spam" : "Interactive Simulator: Spam Filter"} icon="🎮">
+          <p className="mb-4 text-sm">
+            {isVi
+              ? 'Thử nhập một đoạn văn bản hoặc chọn mẫu gợi ý. Mô hình Naive Bayes đơn giản bên dưới sẽ phân tích xác suất của các từ khóa và quyết định xem đây là SPAM hay HAM (tin bình thường).'
+              : 'Try entering some text or choose a suggestion. The simple Naive Bayes model below will analyze keyword probabilities and decide if it is SPAM or HAM (normal message).'}
+          </p>
+          <SpamClassifierDemo />
         </Section>
 
-        {/* 11. Python Implementation */}
-        <Section id="python" title={isVi ? "11. Triển khai Python" : "11. Python Implementation"}>
+        {/* 6. Variants */}
+        <Section id="variants" title={isVi ? "Các biến thể của Naive Bayes" : "Variants of Naive Bayes"} icon="🧬">
+           <div className="grid md:grid-cols-3 gap-4">
+             <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+               <h4 className="font-bold text-blue-600 dark:text-blue-400 mb-2">Multinomial</h4>
+               <p className="text-sm">
+                 {isVi ? "Dùng cho dữ liệu biểu diễn dưới dạng đếm (VD: số lần xuất hiện của từ trong văn bản). Phổ biến nhất cho Text Classification." : "Used for discrete counts (e.g., word counts in text). Most popular for Text Classification."}
+               </p>
+             </div>
+             <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+               <h4 className="font-bold text-sky-600 dark:text-sky-400 mb-2">Gaussian</h4>
+               <p className="text-sm">
+                 {isVi ? "Giả định các đặc trưng liên tục tuân theo phân phối chuẩn (Gaussian/Normal distribution)." : "Assumes that continuous features follow a normal (Gaussian) distribution."}
+               </p>
+             </div>
+             <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+               <h4 className="font-bold text-cyan-600 dark:text-cyan-400 mb-2">Bernoulli</h4>
+               <p className="text-sm">
+                 {isVi ? "Giống Multinomial nhưng dữ liệu đầu vào là nhị phân boolean (VD: từ có xuất hiện hay không, thay vì đếm số lần)." : "Similar to Multinomial but inputs are boolean variables (e.g., word present or not, instead of counts)."}
+               </p>
+             </div>
+           </div>
+        </Section>
+
+        {/* 7. Pros/Cons */}
+        <Section id="pros-cons" title={isVi ? "Ưu & Nhược điểm" : "Pros & Cons"} icon="⚖️">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+              <h4 className="font-bold text-emerald-600 dark:text-emerald-400 mb-3 flex items-center gap-2">
+                <span className="text-xl">✅</span> {isVi ? "Ưu điểm" : "Pros"}
+              </h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2"><span className="text-emerald-500 mt-0.5">•</span> <span>{isVi ? "Huấn luyện cực kỳ nhanh (chỉ đếm tần suất)." : "Extremely fast to train (just counting frequencies)."}</span></li>
+                <li className="flex items-start gap-2"><span className="text-emerald-500 mt-0.5">•</span> <span>{isVi ? "Hoạt động tốt với tập dữ liệu nhỏ." : "Performs well even with small datasets."}</span></li>
+                <li className="flex items-start gap-2"><span className="text-emerald-500 mt-0.5">•</span> <span>{isVi ? "Xử lý tuyệt vời không gian đa chiều (như hàng chục ngàn từ vựng)." : "Handles highly dimensional spaces excellently (like tens of thousands of words)."}</span></li>
+              </ul>
+            </div>
+            <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+              <h4 className="font-bold text-rose-600 dark:text-rose-400 mb-3 flex items-center gap-2">
+                <span className="text-xl">⚠️</span> {isVi ? "Nhược điểm" : "Cons"}
+              </h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2"><span className="text-rose-500 mt-0.5">•</span> <span>{isVi ? "Giả định các đặc trưng độc lập hiếm khi thực tế (VD: từ 'New' và 'York' thường đi cùng nhau)." : "The assumption of feature independence is rarely realistic."}</span></li>
+                <li className="flex items-start gap-2"><span className="text-rose-500 mt-0.5">•</span> <span>{isVi ? "Zero Frequency: Nếu từ mới xuất hiện, xác suất = 0, làm toàn bộ tích = 0 (cần dùng Laplace Smoothing)." : "Zero Frequency problem requires Laplace smoothing."}</span></li>
+                <li className="flex items-start gap-2"><span className="text-rose-500 mt-0.5">•</span> <span>{isVi ? "Ước lượng xác suất không được chuẩn (Bad estimator)." : "Known as a bad estimator, so the output probabilities shouldn't be taken too seriously."}</span></li>
+              </ul>
+            </div>
+          </div>
+        </Section>
+
+        {/* 8. Python Code */}
+        <Section id="python" title={isVi ? "Triển khai Python" : "Python Implementation"} icon="💻">
           <p className="mb-4">
             {isVi 
-              ? "Sử dụng Scikit-Learn với MultinomialNB để phân loại văn bản:"
-              : "Using Scikit-Learn with MultinomialNB for text classification:"}
+              ? "Triển khai hệ thống phân loại Spam bằng Multinomial Naive Bayes và CountVectorizer:"
+              : "Implementing a Spam classification system using Multinomial Naive Bayes and CountVectorizer:"}
           </p>
-          <div className="rounded-xl overflow-hidden shadow-lg border border-slate-700">
-            <SyntaxHighlighter language="python" style={vscDarkPlus} showLineNumbers>
+          <div className="rounded-2xl overflow-hidden border border-slate-700 shadow-xl">
+            <div className="bg-slate-900 px-4 py-2 flex items-center gap-2 border-b border-slate-800">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+              </div>
+              <span className="text-xs text-slate-400 font-mono ml-2">spam_classifier.py</span>
+            </div>
+            <SyntaxHighlighter language="python" style={vscDarkPlus} showLineNumbers customStyle={{ margin: 0, padding: '1.5rem', background: '#0f172a' }}>
               {pythonCode}
             </SyntaxHighlighter>
           </div>
         </Section>
-
-        {/* 12. Real World Applications */}
-        <Section id="applications" title={isVi ? "12. Ứng dụng thực tế" : "12. Real World Applications"}>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {['Spam Filtering', 'Sentiment Analysis', 'Document Classification', 'Medical Diagnosis', 'Recommendation Systems'].map((app, idx) => (
-              <div key={idx} className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center font-medium text-slate-700 dark:text-slate-300">
-                {app}
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        {/* 13. Comparison */}
-        <Section id="comparison" title={isVi ? "13. So sánh với Thuật toán khác" : "13. Comparison with Other Algorithms"}>
-          <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-100 dark:bg-slate-800">
-                <tr>
-                  <th className="p-4 font-semibold">Feature</th>
-                  <th className="p-4 font-semibold">Naive Bayes</th>
-                  <th className="p-4 font-semibold">Logistic Regression</th>
-                  <th className="p-4 font-semibold">KNN</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                <tr className="bg-white dark:bg-slate-900">
-                  <td className="p-4 font-medium">Training Speed</td>
-                  <td className="p-4 text-green-500 font-bold">Very Fast</td>
-                  <td className="p-4 text-yellow-500">Medium</td>
-                  <td className="p-4 text-green-500 font-bold">Zero (Lazy)</td>
-                </tr>
-                <tr className="bg-slate-50 dark:bg-slate-800/50">
-                  <td className="p-4 font-medium">Prediction Speed</td>
-                  <td className="p-4 text-green-500 font-bold">Fast</td>
-                  <td className="p-4 text-green-500 font-bold">Fast</td>
-                  <td className="p-4 text-red-500 font-bold">Very Slow</td>
-                </tr>
-                <tr className="bg-white dark:bg-slate-900">
-                  <td className="p-4 font-medium">Correlated Features</td>
-                  <td className="p-4 text-red-500 font-bold">Poor</td>
-                  <td className="p-4 text-green-500 font-bold">Good</td>
-                  <td className="p-4 text-yellow-500">Moderate</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </Section>
-
-        {/* 14. Complexity Analysis */}
-        <Section id="complexity" title={isVi ? "14. Phân tích độ phức tạp" : "14. Complexity Analysis"}>
-           <ul className="space-y-3">
-            <li>
-              <strong>{isVi ? "Huấn luyện (Training):" : "Training:"} </strong> 
-              <InlineMath math="O(n \cdot d)" /> 
-              <span className="ml-2 text-sm text-slate-500">{isVi ? "(n = số mẫu, d = số features)" : "(n = samples, d = features)"}</span>
-            </li>
-            <li>
-              <strong>{isVi ? "Dự đoán (Prediction):" : "Prediction:"} </strong> 
-              <InlineMath math="O(c \cdot d)" />
-              <span className="ml-2 text-sm text-slate-500">{isVi ? "(c = số lớp)" : "(c = classes)"}</span>
-            </li>
-            <li>
-              <strong>{isVi ? "Bộ nhớ (Memory):" : "Memory:"} </strong> 
-              <InlineMath math="O(c \cdot d)" />
-            </li>
-          </ul>
-        </Section>
-
-        {/* 15. FAQ */}
-        <Section id="faq" title={isVi ? "15. Câu hỏi phỏng vấn (FAQ)" : "15. Interview Questions"}>
-          <div className="space-y-3">
-            {faqs.map((faq, idx) => (
-              <div key={idx} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800">
-                <button 
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full p-4 text-left font-bold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
-                >
-                  {faq.q}
-                  {openFaq === idx ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                </button>
-                <AnimatePresence>
-                  {openFaq === idx && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }} 
-                      animate={{ height: 'auto', opacity: 1 }} 
-                      exit={{ height: 0, opacity: 0 }}
-                      className="px-4 pb-4 text-slate-600 dark:text-slate-400"
-                    >
-                      {faq.a}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        {/* 16. Summary */}
-        <Section id="summary" title={isVi ? "16. Tổng kết" : "16. Summary Section"}>
-          <div className="p-8 rounded-3xl bg-gradient-to-r from-slate-100 to-blue-50 dark:from-slate-800 dark:to-blue-900/20 border border-blue-100 dark:border-blue-800">
-            <h3 className="text-2xl font-bold mb-4 text-blue-700 dark:text-blue-400">
-              {isVi ? "Ghi nhớ cốt lõi" : "Core Takeaways"}
-            </h3>
-            <p className="text-lg leading-relaxed">
-              {isVi 
-                ? "Naive Bayes vượt trội nhờ tốc độ, sự đơn giản và hiệu suất cực mạnh trên dữ liệu văn bản (bag-of-words). Dù mang theo giả định 'ngây thơ' về sự độc lập của các đặc trưng, nó vẫn đánh bại nhiều thuật toán phức tạp khác trong các bài toán phân loại văn bản thực tế. Luôn nhớ áp dụng Laplace Smoothing để tránh lỗi xác suất 0!"
-                : "Naive Bayes shines due to its speed, simplicity, and immense performance on text data (bag-of-words). Despite carrying the 'naive' assumption of feature independence, it frequently beats more complex algorithms in real-world text classification. Always remember to apply Laplace Smoothing to avoid the zero probability trap!"}
-            </p>
-          </div>
-        </Section>
-
       </div>
 
       {/* Table of contents sidebar */}
       <div className="hidden lg:block lg:w-1/4">
-        <div className="sticky top-24 p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
-          <h3 className="font-bold text-lg mb-4 text-blue-600 dark:text-blue-400">{isVi ? "Nội dung" : "Contents"}</h3>
-          <nav className="flex flex-col space-y-2 text-sm overflow-y-auto max-h-[70vh] custom-scrollbar">
+        <div className="sticky top-24 p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/20 dark:shadow-none">
+          <h3 className="font-bold text-lg mb-4 bg-gradient-to-r from-blue-600 to-sky-600 bg-clip-text text-transparent">
+            {isVi ? "Nội dung" : "Contents"}
+          </h3>
+          <nav className="flex flex-col space-y-2.5 text-sm font-medium">
             {[
-              { id: 'hero', text: isVi ? "1. Hero" : "1. Hero" },
-              { id: 'intro', text: isVi ? "2. Giới thiệu" : "2. Intro" },
+              { id: 'hero', text: isVi ? "1. Tổng quan" : "1. Overview" },
+              { id: 'intro', text: isVi ? "2. Giới thiệu" : "2. Introduction" },
               { id: 'bayes', text: isVi ? "3. Định lý Bayes" : "3. Bayes Theorem" },
-              { id: 'types', text: isVi ? "4. Các loại NB" : "4. Types" },
-              { id: 'math', text: isVi ? "5. Toán học" : "5. Math" },
-              { id: 'training', text: isVi ? "6. Huấn luyện" : "6. Training" },
-              { id: 'example', text: isVi ? "7. Ví dụ" : "7. Example" },
-              { id: 'pros-cons', text: isVi ? "8. Ưu / Nhược" : "8. Pros & Cons" },
-              { id: 'laplace', text: isVi ? "9. Laplace" : "9. Laplace Smoothing" },
-              { id: 'visualization', text: isVi ? "10. Trực quan hoá" : "10. Visuals" },
-              { id: 'python', text: isVi ? "11. Code Python" : "11. Python" },
-              { id: 'applications', text: isVi ? "12. Ứng dụng" : "12. Applications" },
-              { id: 'comparison', text: isVi ? "13. So sánh" : "13. Comparison" },
-              { id: 'complexity', text: isVi ? "14. Độ phức tạp" : "14. Complexity" },
-              { id: 'faq', text: isVi ? "15. Câu hỏi" : "15. FAQ" },
-              { id: 'summary', text: isVi ? "16. Tổng kết" : "16. Summary" },
+              { id: 'math', text: isVi ? "4. Toán học" : "4. Math" },
+              { id: 'simulator', text: isVi ? "5. Mô phỏng Spam" : "5. Simulator" },
+              { id: 'variants', text: isVi ? "6. Các biến thể" : "6. Variants" },
+              { id: 'pros-cons', text: isVi ? "7. Ưu / Nhược" : "7. Pros & Cons" },
+              { id: 'python', text: isVi ? "8. Code Python" : "8. Python" },
             ].map(item => (
               <a 
                 key={item.id} 
                 href={`#${item.id}`} 
-                className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-2"
               >
+                <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></div>
                 {item.text}
               </a>
             ))}

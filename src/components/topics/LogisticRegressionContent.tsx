@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BlockMath, InlineMath } from 'react-katex';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -11,22 +11,36 @@ export default function LogisticRegressionContent() {
   const isVi = i18n.language.startsWith('vi');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const Section = ({ title, children, id }: { title: string, children: React.ReactNode, id: string }) => (
+  const Section = ({ title, children, id, icon }: { title: string, children: React.ReactNode, id: string, icon?: string }) => (
     <section id={id} className="mb-16 scroll-mt-24">
-      <h2 className="text-3xl font-bold mb-6 text-orange-600 dark:text-orange-400 border-b border-slate-200 dark:border-slate-700 pb-3">
-        {title}
-      </h2>
+      <div className="flex items-center gap-3 mb-6 border-b border-slate-200 dark:border-slate-700 pb-3">
+        {icon && (
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-base shadow-md">
+            {icon}
+          </div>
+        )}
+        <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+          {title}
+        </h2>
+      </div>
       <div className="space-y-4 text-slate-700 dark:text-slate-300 leading-relaxed">
         {children}
       </div>
     </section>
   );
 
-  const InfoBox = ({ children }: { children: React.ReactNode }) => (
-    <div className="p-5 my-6 bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500 rounded-r-xl shadow-sm">
-      {children}
-    </div>
-  );
+  const InfoBox = ({ children, variant = 'info' }: { children: React.ReactNode, variant?: 'info' | 'warning' }) => {
+    const isWarn = variant === 'warning';
+    return (
+      <div className={`p-5 my-6 border-l-4 rounded-r-xl shadow-sm ${
+        isWarn 
+          ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500' 
+          : 'bg-violet-50 dark:bg-violet-900/20 border-violet-500'
+      }`}>
+        {children}
+      </div>
+    );
+  };
 
   const pythonCode = `import numpy as np
 import matplotlib.pyplot as plt
@@ -77,16 +91,312 @@ print("Classification Report:\\n", classification_report(y_test, y_pred))`;
     {
       q: isVi ? "Sự khác biệt giữa Logistic Regression và Linear Regression?" : "Difference between Logistic Regression and Linear Regression?",
       a: isVi ? "Linear Regression dự đoán một giá trị liên tục (Ví dụ: giá nhà) và output có thể từ -∞ đến +∞. Logistic Regression dự đoán xác suất rớt vào một lớp (Ví dụ: Chó/Mèo) và output bị giới hạn từ 0 đến 1." : "Linear Regression predicts continuous values (e.g., house prices) with outputs from -∞ to +∞. Logistic Regression predicts class probabilities (e.g., Dog/Cat) bounded between 0 and 1."
-    },
-    {
-      q: isVi ? "Log Loss là gì?" : "What is log loss?",
-      a: isVi ? "Log Loss (Binary Cross-Entropy) là hàm chi phí của Logistic Regression. Nó phạt nặng mô hình nếu mô hình tự tin dự đoán sai (VD: đoán 99% là Chó nhưng thực tế là Mèo)." : "Log Loss (Binary Cross-Entropy) is the cost function for Logistic Regression. It heavily penalizes the model for making confident incorrect predictions."
-    },
-    {
-      q: isVi ? "Regularization (Điều chuẩn) là gì?" : "What is regularization?",
-      a: isVi ? "Là kỹ thuật thêm một 'hình phạt' vào hàm mất mát đối với các trọng số (weights) quá lớn để ngăn mô hình bị Overfitting (Học vẹt). Có L1 (Lasso) và L2 (Ridge)." : "It is a technique that adds a penalty to the loss function for large weights to prevent Overfitting. Common types are L1 (Lasso) and L2 (Ridge)."
     }
   ];
+
+  /* ───────────── Logistic Interactive Simulator ───────────── */
+  function LogisticSimulator() {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [selectedClass, setSelectedClass] = useState<1 | 0>(1);
+    const [epochs, setEpochs] = useState(0);
+    const [accuracy, setAccuracy] = useState('0.0%');
+    const [hint, setHint] = useState(isVi ? 'Chọn Lớp và click lên canvas để vẽ điểm' : 'Select a Class and click canvas to add points');
+    const [isFitting, setIsFitting] = useState(false);
+    
+    const pointsRef = useRef<{x:number, y:number, label:number}[]>([]);
+    const weightsRef = useRef<{w1:number, w2:number, b:number}>({w1: 0, w2: 0, b: 0});
+    const fitTimerRef = useRef<ReturnType<typeof setInterval>|null>(null);
+
+    const draw = useCallback(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      
+      // Background
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, W, H);
+      
+      // Grid dots
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      for (let x = 20; x < W; x += 30) for (let y = 20; y < H; y += 30) ctx.fillRect(x, y, 1.5, 1.5);
+      
+      const { w1, w2, b } = weightsRef.current;
+      
+      // Decision boundary mapping normalized [0,1] coordinates back to canvas
+      if (w1 !== 0 || w2 !== 0) {
+        ctx.save();
+        ctx.beginPath();
+        if (Math.abs(w2) > Math.abs(w1)) {
+          // line intercepts x=0 and x=W
+          const y1 = H * (-w1*(0/W) - b)/w2;
+          const y2 = H * (-w1*(W/W) - b)/w2;
+          ctx.moveTo(0, y1);
+          ctx.lineTo(W, y2);
+        } else {
+          // line intercepts y=0 and y=H
+          const x1 = W * (-w2*(0/H) - b)/w1;
+          const x2 = W * (-w2*(H/H) - b)/w1;
+          ctx.moveTo(x1, 0);
+          ctx.lineTo(x2, H);
+        }
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        
+        // draw shading
+        ctx.globalAlpha = 0.1;
+        if (w2 !== 0) {
+           // Shade based on prediction sign
+           ctx.fillStyle = '#6366f1';
+           ctx.beginPath();
+           if (w2 > 0) {
+             ctx.moveTo(0, H * (-w1*(0/W) - b)/w2);
+             ctx.lineTo(W, H * (-w1*(W/W) - b)/w2);
+             ctx.lineTo(W, H);
+             ctx.lineTo(0, H);
+           } else {
+             ctx.moveTo(0, H * (-w1*(0/W) - b)/w2);
+             ctx.lineTo(W, H * (-w1*(W/W) - b)/w2);
+             ctx.lineTo(W, 0);
+             ctx.lineTo(0, 0);
+           }
+           ctx.fill();
+        }
+        ctx.restore();
+      }
+      
+      // Draw points
+      pointsRef.current.forEach(p => {
+        const color = p.label === 1 ? '#6366f1' : '#f43f5e';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 7, 0, Math.PI*2);
+        ctx.fillStyle = color + '44'; // glow
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI*2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+    }, []);
+
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const resize = () => {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        draw();
+      };
+      resize();
+      window.addEventListener('resize', resize);
+      return () => window.removeEventListener('resize', resize);
+    }, [draw]);
+
+    const updateStats = useCallback(() => {
+       const pts = pointsRef.current;
+       const canvas = canvasRef.current;
+       if (!pts.length || !canvas) { setAccuracy('0.0%'); return; }
+       const W = canvas.width, H = canvas.height;
+       const { w1, w2, b } = weightsRef.current;
+       let correct = 0;
+       pts.forEach(p => {
+         const z = w1*(p.x/W) + w2*(p.y/H) + b;
+         const pred = z >= 0 ? 1 : 0;
+         if (pred === p.label) correct++;
+       });
+       setAccuracy(((correct/pts.length)*100).toFixed(1) + '%');
+    }, []);
+
+    const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+      pointsRef.current.push({ x, y, label: selectedClass });
+      draw();
+      if (weightsRef.current.w1 !== 0 || weightsRef.current.w2 !== 0) {
+        updateStats();
+      }
+    }, [selectedClass, draw, updateStats]);
+
+    const fitModel = useCallback(() => {
+      const pts = pointsRef.current;
+      const canvas = canvasRef.current;
+      if (pts.length < 2 || !canvas) {
+        setHint(isVi ? 'Cần ít nhất 2 điểm để huấn luyện!' : 'Need at least 2 points to train!');
+        return;
+      }
+      
+      const hasClass1 = pts.some(p => p.label === 1);
+      const hasClass0 = pts.some(p => p.label === 0);
+      if (!hasClass1 || !hasClass0) {
+        setHint(isVi ? 'Cần điểm của cả 2 lớp!' : 'Need points from both classes!');
+        return;
+      }
+
+      if (isFitting) return;
+      setIsFitting(true);
+      
+      const W = canvas.width, H = canvas.height;
+      weightsRef.current = { w1: (Math.random()-0.5)*0.1, w2: (Math.random()-0.5)*0.1, b: 0 };
+      setEpochs(0);
+      
+      let currentEpoch = 0;
+      const lr = 1.5; // relatively large LR for fast convergence on [0,1] normalized data
+      
+      if (fitTimerRef.current) clearInterval(fitTimerRef.current);
+      
+      fitTimerRef.current = setInterval(() => {
+        let { w1, w2, b } = weightsRef.current;
+        
+        let dw1 = 0, dw2 = 0, db = 0;
+        pts.forEach(p => {
+          const nx = p.x/W, ny = p.y/H;
+          const z = w1*nx + w2*ny + b;
+          const y_pred = 1 / (1 + Math.exp(-z));
+          const error = y_pred - p.label;
+          dw1 += error * nx;
+          dw2 += error * ny;
+          db += error;
+        });
+        
+        w1 -= lr * (dw1 / pts.length);
+        w2 -= lr * (dw2 / pts.length);
+        b -= lr * (db / pts.length);
+
+        weightsRef.current = { w1, w2, b };
+        currentEpoch += 5;
+        setEpochs(currentEpoch);
+        draw();
+        updateStats();
+
+        if (currentEpoch >= 150) {
+          clearInterval(fitTimerRef.current!);
+          fitTimerRef.current = null;
+          setIsFitting(false);
+          setHint(isVi ? 'Huấn luyện hoàn tất!' : 'Training complete!');
+        }
+      }, 40);
+      
+    }, [isFitting, draw, updateStats, isVi]);
+
+    const generateData = useCallback(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const W = canvas.width || 600, H = canvas.height || 360;
+      pointsRef.current = [];
+      
+      for(let i=0; i<30; i++) {
+        pointsRef.current.push({
+          x: W*0.7 + (Math.random()-0.5)*150,
+          y: H*0.3 + (Math.random()-0.5)*150,
+          label: 1
+        });
+      }
+      for(let i=0; i<30; i++) {
+        pointsRef.current.push({
+          x: W*0.3 + (Math.random()-0.5)*150,
+          y: H*0.7 + (Math.random()-0.5)*150,
+          label: 0
+        });
+      }
+      weightsRef.current = {w1:0, w2:0, b:0};
+      setEpochs(0);
+      setAccuracy('0.0%');
+      setHint(isVi ? 'Đã tạo dữ liệu mẫu. Bấm Fit Model để huấn luyện.' : 'Generated sample data. Click Fit Model to train.');
+      draw();
+    }, [draw, isVi]);
+
+    const clearAll = useCallback(() => {
+      if (fitTimerRef.current) clearInterval(fitTimerRef.current);
+      fitTimerRef.current = null;
+      setIsFitting(false);
+      pointsRef.current = [];
+      weightsRef.current = {w1:0, w2:0, b:0};
+      setEpochs(0);
+      setAccuracy('0.0%');
+      setHint(isVi ? 'Canvas đã xóa. Click để vẽ điểm mới!' : 'Canvas cleared. Click to draw new points!');
+      draw();
+    }, [draw, isVi]);
+
+    return (
+      <div className="rounded-3xl overflow-hidden border border-slate-700 shadow-2xl bg-slate-900 mt-6">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm">
+          <div className="flex gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-red-500" />
+            <span className="w-3 h-3 rounded-full bg-yellow-500" />
+            <span className="w-3 h-3 rounded-full bg-green-500" />
+          </div>
+          <span className="text-xs font-semibold text-slate-400 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+            {isVi ? 'Bảng mô phỏng Logistic Regression' : 'Logistic Regression Simulator'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
+          <div className="lg:col-span-1 border-b lg:border-b-0 lg:border-r border-slate-800 p-4 flex flex-col gap-4">
+            
+            <div>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">{isVi ? 'Chọn lớp để vẽ' : 'Select class to draw'}</span>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => setSelectedClass(1)} className={`py-2 px-3 text-xs font-bold rounded-xl border transition-colors flex justify-center items-center gap-2 ${selectedClass === 1 ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}>
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-300"></span> Class A (1)
+                </button>
+                <button onClick={() => setSelectedClass(0)} className={`py-2 px-3 text-xs font-bold rounded-xl border transition-colors flex justify-center items-center gap-2 ${selectedClass === 0 ? 'bg-rose-600 border-rose-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}>
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-300"></span> Class B (0)
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex flex-col gap-2">
+                <button onClick={fitModel} disabled={isFitting} className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl border border-violet-500 transition-colors shadow-lg shadow-violet-900/50">
+                  {isFitting ? (isVi ? 'Đang huấn luyện...' : 'Training...') : (isVi ? '▶ Huấn luyện (Fit Model)' : '▶ Fit Model')}
+                </button>
+                <button onClick={generateData} disabled={isFitting} className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition-colors">
+                  {isVi ? 'Tạo dữ liệu mẫu' : 'Generate sample data'}
+                </button>
+                <button onClick={clearAll} disabled={isFitting} className="w-full py-2 bg-red-900/30 hover:bg-red-900/50 disabled:opacity-50 text-red-400 text-xs font-semibold rounded-xl border border-red-900/50 transition-colors">
+                  {isVi ? 'Xóa hết' : 'Clear all'}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mt-auto">
+              <div className="bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Epochs</span>
+                <span className="text-xs font-bold block mt-0.5 text-violet-300">{epochs} / 150</span>
+              </div>
+              <div className="bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Accuracy</span>
+                <span className="text-xs font-bold block mt-0.5 text-emerald-400">{accuracy}</span>
+              </div>
+              <div className="bg-slate-800/60 rounded-xl p-2.5 border border-slate-700/50 col-span-2">
+                 <p className="text-[10px] text-slate-400 leading-relaxed">{hint}</p>
+              </div>
+            </div>
+
+          </div>
+
+          <div className="lg:col-span-2 relative">
+            <canvas ref={canvasRef} onClick={handleCanvasClick}
+              className="w-full cursor-crosshair block"
+              style={{ minHeight: 360 }} />
+            <div className="absolute bottom-3 right-3 bg-slate-900/80 backdrop-blur text-[10px] text-slate-400 px-3 py-1.5 rounded-lg border border-slate-700">
+               {isVi ? 'Đường màu vàng: Ranh giới quyết định (Decision Boundary)' : 'Yellow line: Decision Boundary'}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
@@ -94,449 +404,201 @@ print("Classification Report:\\n", classification_report(y_test, y_pred))`;
         
         {/* 1. Hero Section */}
         <section id="hero" className="mb-16 scroll-mt-24">
-          <div className="p-10 rounded-3xl bg-gradient-to-br from-orange-600 to-red-800 text-white shadow-2xl relative overflow-hidden">
+          <div className="p-10 rounded-3xl bg-gradient-to-br from-violet-900 via-purple-800 to-indigo-900 text-white shadow-2xl relative overflow-hidden border border-violet-700/50">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-400/20 rounded-full blur-2xl transform -translate-x-1/2 translate-y-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-400/20 rounded-full blur-2xl transform -translate-x-1/2 translate-y-1/2"></div>
             
             <div className="relative z-10">
-              <h1 className="text-4xl md:text-6xl font-extrabold mb-4">Logistic Regression</h1>
-              <p className="text-xl md:text-2xl text-orange-100 mb-8 max-w-2xl">
+              <span className="inline-block text-xs font-bold uppercase tracking-widest text-violet-300 mb-3 bg-violet-800/60 px-3 py-1 rounded-full border border-violet-700">
+                {isVi ? 'Học có giám sát' : 'Supervised Learning'}
+              </span>
+              <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Logistic Regression</h1>
+              <p className="text-xl text-violet-100 mb-8 max-w-2xl leading-relaxed">
                 {isVi 
-                  ? "Đừng để cái tên đánh lừa! Đây không phải là một mô hình hồi quy thông thường, mà là thuật toán phân loại kinh điển và được sử dụng rộng rãi nhất."
-                  : "Don't let the name fool you! This is not a standard regression model, but rather a fundamental and widely used classification algorithm."}
+                  ? "Đừng để cái tên đánh lừa! Đây là một trong những thuật toán phân loại kinh điển nhất, nền tảng của các mạng nơ-ron hiện đại."
+                  : "Don't let the name fool you! This is one of the most fundamental classification algorithms and the building block of modern neural networks."}
               </p>
               
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl mb-8 max-w-xl">
-                <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-orange-200" />
-                  {isVi ? "Tóm tắt nhanh" : "Quick Summary"}
-                </h3>
-                <p className="text-orange-50">
-                  {isVi 
-                    ? "Dự đoán xác suất xảy ra của một sự kiện bằng cách khớp dữ liệu vào một đường cong Sigmoid. Cốt lõi của hầu hết các mạng nơ-ron cơ bản."
-                    : "Predicts the probability of an event by fitting data into a Sigmoid curve. It forms the core of basic neural networks."}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-4">
-                <a href="#math" className="px-6 py-3 bg-white text-orange-700 font-bold rounded-xl hover:bg-orange-50 transition-colors shadow-lg">
-                  {isVi ? "Khám phá Toán học" : "Explore Math"}
-                </a>
-                <a href="#python" className="px-6 py-3 bg-orange-700/50 text-white font-bold border border-orange-400/30 rounded-xl hover:bg-orange-700/70 transition-colors">
-                  {isVi ? "Xem Code Python" : "View Python Code"}
-                </a>
+              <div className="flex flex-wrap gap-3 mt-5">
+                {['Binary Classification', 'Sigmoid', 'Probabilistic', 'Log Loss'].map(tag => (
+                  <span key={tag} className="text-xs font-semibold text-violet-200 bg-violet-700/50 px-3 py-1 rounded-full border border-violet-600/50">
+                    {tag}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
         {/* 2. Introduction */}
-        <Section id="intro" title={isVi ? "2. Giới thiệu" : "2. Introduction"}>
+        <Section id="intro" title={isVi ? "Giới thiệu" : "Introduction"} icon="🔍">
           <p>
             {isVi 
-              ? "Logistic Regression là một thuật toán học máy có giám sát chuyên giải quyết các bài toán phân loại (Classification). Mặc dù có từ 'Regression' (Hồi quy) trong tên gọi, nó không dự đoán một số thực liên tục như Linear Regression."
-              : "Logistic Regression is a supervised machine learning algorithm used primarily for Classification tasks. Despite having 'Regression' in its name, it does not predict continuous continuous variables like Linear Regression does."}
+              ? "Logistic Regression là một thuật toán học máy có giám sát chuyên giải quyết các bài toán phân loại (Classification). Mặc dù có từ 'Regression' (Hồi quy) trong tên gọi, nó không dùng để dự đoán một số thực liên tục như Linear Regression."
+              : "Logistic Regression is a supervised machine learning algorithm used primarily for Classification tasks. Despite having 'Regression' in its name, it does not predict continuous variables like Linear Regression does."}
           </p>
           <p>
             {isVi
-              ? "Thay vào đó, nó dự đoán XÁC SUẤT một điểm dữ liệu rớt vào lớp mặc định (ví dụ lớp '1'). Điều này khiến nó trở thành công cụ tuyệt vời cho các bài toán Binary Classification (Phân loại nhị phân: Thắng/Thua, Bệnh/Khoẻ, Rác/Không rác)."
-              : "Instead, it predicts the PROBABILITY that a given data point belongs to the default class (e.g., class '1'). This makes it an excellent tool for Binary Classification problems (Win/Loss, Sick/Healthy, Spam/Not Spam)."}
+              ? "Thay vào đó, nó dự đoán XÁC SUẤT một điểm dữ liệu thuộc về một lớp (ví dụ lớp '1'). Điều này khiến nó trở thành công cụ tuyệt vời cho các bài toán Binary Classification (Phân loại nhị phân: Thắng/Thua, Rác/Không rác)."
+              : "Instead, it predicts the PROBABILITY that a given data point belongs to a default class (e.g., class '1'). This makes it an excellent tool for Binary Classification problems (Win/Loss, Spam/Not Spam)."}
           </p>
         </Section>
 
         {/* 3. Intuition */}
-        <Section id="intuition" title={isVi ? "3. Trực giác (Intuition)" : "3. Intuition"}>
+        <Section id="intuition" title={isVi ? "Trực giác (Intuition)" : "Intuition"} icon="💡">
           <p>
             {isVi 
-              ? "Trong Linear Regression, một đường thẳng có thể kéo dài từ âm vô cùng đến dương vô cùng. Nếu ta dùng nó để dự đoán xác suất thì sẽ thu được những xác suất vô lý như -0.5 hay 1.8. Xác suất bắt buộc phải nằm trong khoảng [0, 1]."
+              ? "Trong Linear Regression, một đường thẳng có thể kéo dài từ âm vô cùng đến dương vô cùng. Nếu ta dùng nó để dự đoán xác suất thì sẽ thu được những kết quả vô lý như -0.5 hay 1.8. Xác suất bắt buộc phải nằm trong khoảng [0, 1]."
               : "In Linear Regression, a straight line can stretch from negative infinity to positive infinity. If we use it to predict probabilities, we might get nonsensical values like -0.5 or 1.8. Probabilities must strictly be bounded between [0, 1]."}
           </p>
           <p>
             {isVi
-              ? "Vì vậy, Logistic Regression lấy kết quả tuyến tính đó, bóp méo nó thông qua một đường cong chữ S, sao cho mọi giá trị lớn đều tiến về 1, và mọi giá trị âm nhỏ đều tiến về 0. Cuối cùng, chúng ta đặt một 'Ngưỡng quyết định' (Decision Boundary) thường là 0.5: Lớn hơn 0.5 là Lớp 1, nhỏ hơn là Lớp 0."
-              : "Thus, Logistic Regression takes that linear output and squashes it through an S-shaped curve, so large positive values approach 1, and large negative values approach 0. Finally, we set a 'Decision Boundary', usually at 0.5: anything above is Class 1, anything below is Class 0."}
+              ? "Vì vậy, Logistic Regression lấy kết quả tuyến tính đó, bóp méo nó thông qua một đường cong chữ S, sao cho mọi giá trị lớn đều tiến về 1, và mọi giá trị âm nhỏ đều tiến về 0."
+              : "Thus, Logistic Regression takes that linear output and squashes it through an S-shaped curve, so large positive values approach 1, and large negative values approach 0."}
           </p>
         </Section>
 
         {/* 4. Sigmoid Function */}
-        <Section id="sigmoid" title={isVi ? "4. Hàm Sigmoid (Hàm Logistic)" : "4. Sigmoid Function"}>
+        <Section id="sigmoid" title={isVi ? "Hàm Sigmoid" : "Sigmoid Function"} icon="📈">
           <p>
-            {isVi ? "Trái tim của thuật toán này là Hàm Sigmoid. Công thức:" : "The heart of this algorithm is the Sigmoid function. Formula:"}
+            {isVi ? "Trái tim của thuật toán này là Hàm Sigmoid (Hàm Logistic). Công thức:" : "The heart of this algorithm is the Sigmoid function. Formula:"}
           </p>
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 my-6 flex justify-center">
+          <div className="bg-slate-900 p-6 rounded-2xl my-6 flex justify-center text-white overflow-x-auto shadow-inner">
             <BlockMath math="\sigma(z) = \frac{1}{1 + e^{-z}}" />
           </div>
           <p className="text-sm">
             {isVi ? "Trong đó:" : "Where:"} <InlineMath math="e" /> {isVi ? "là hằng số Euler (~2.718) và" : "is Euler's number (~2.718) and"} <InlineMath math="z" /> {isVi ? "là giá trị đầu vào (kết quả hồi quy tuyến tính)." : "is the input value (the linear regression output)."}
           </p>
+          
+          <div className="flex flex-col md:flex-row gap-6 items-center justify-center bg-slate-50 dark:bg-slate-800 p-8 rounded-3xl border border-slate-200 dark:border-slate-700 mt-6">
+            <div className="flex flex-col items-center">
+              <span className="font-bold mb-4">The S-Curve (Sigmoid)</span>
+              <svg width="300" height="200" viewBox="0 0 300 200" className="overflow-visible">
+                <line x1="20" y1="20" x2="280" y2="20" stroke="currentColor" strokeDasharray="4,4" className="text-slate-300 dark:text-slate-600" />
+                <text x="5" y="25" fontSize="12" fill="currentColor" className="text-slate-500">1.0</text>
+                
+                <line x1="20" y1="100" x2="280" y2="100" stroke="currentColor" strokeDasharray="4,4" className="text-slate-300 dark:text-slate-600" />
+                <text x="5" y="105" fontSize="12" fill="currentColor" className="text-slate-500">0.5</text>
+                
+                <line x1="20" y1="180" x2="280" y2="180" stroke="currentColor" strokeWidth="2" className="text-slate-400" />
+                <line x1="150" y1="20" x2="150" y2="180" stroke="currentColor" strokeWidth="2" className="text-slate-400" />
+                
+                <path d="M 20 175 Q 120 170 150 100 T 280 25" fill="none" stroke="#8b5cf6" strokeWidth="4" />
+                
+                <circle cx="150" cy="100" r="5" fill="#ef4444" />
+                <text x="160" y="95" fill="#ef4444" fontSize="12" fontWeight="bold">Threshold (0.5)</text>
+                <text x="270" y="195" fill="currentColor" fontSize="12" className="text-slate-500">+z</text>
+                <text x="20" y="195" fill="currentColor" fontSize="12" className="text-slate-500">-z</text>
+              </svg>
+            </div>
+          </div>
         </Section>
 
         {/* 5. Mathematical Foundation */}
-        <Section id="math" title={isVi ? "5. Nền tảng Toán học" : "5. Mathematical Foundation"}>
-          <ol className="list-decimal list-inside space-y-4 ml-4">
-            <li>
-              <strong>{isVi ? "Tổ hợp tuyến tính (Linear Combination): " : "Linear Combination: "}</strong>
-              {isVi ? "Đầu tiên, ta tính tổng có trọng số của các đặc trưng (giống Linear Regression)." : "First, we calculate the weighted sum of the features (just like Linear Regression)."}
-              <BlockMath math="z = w_1 x_1 + w_2 x_2 + ... + w_n x_n + b = W^T X + b" />
-            </li>
-            <li>
-              <strong>{isVi ? "Áp dụng Sigmoid: " : "Apply Sigmoid: "}</strong>
-              {isVi ? "Đưa " : "Pass "} <InlineMath math="z" /> {isVi ? " qua hàm Sigmoid để lấy xác suất." : " through the Sigmoid function to get the probability."}
+        <Section id="math" title={isVi ? "Nền tảng Toán học" : "Mathematical Foundation"} icon="➗">
+          <div className="bg-slate-900 rounded-2xl p-6 text-white space-y-6 shadow-inner">
+            <div>
+              <div className="text-sm text-slate-400 mb-2 font-semibold">1. {isVi ? "Hồi quy tuyến tính" : "Linear Combination"}</div>
+              <BlockMath math="z = W^T X + b" />
+            </div>
+            <div className="border-t border-slate-700/50 pt-4">
+              <div className="text-sm text-slate-400 mb-2 font-semibold">2. {isVi ? "Xác suất (Sigmoid)" : "Probability (Sigmoid)"}</div>
               <BlockMath math="\hat{y} = P(y=1 | X) = \sigma(z)" />
-            </li>
-            <li>
-              <strong>{isVi ? "Chuyển thành Nhãn (Class Label): " : "Convert to Class Label: "}</strong>
-              {isVi ? "Áp dụng ngưỡng quyết định." : "Apply the decision boundary threshold."}
-              <BlockMath math="y_{pred} = \begin{cases} 1 & \text{if } \hat{y} \geq 0.5 \\ 0 & \text{if } \hat{y} < 0.5 \end{cases}" />
-            </li>
-          </ol>
-        </Section>
-
-        {/* 6. Cost Function */}
-        <Section id="cost" title={isVi ? "6. Hàm chi phí (Cost Function)" : "6. Cost Function"}>
-          <p>
-            {isVi 
-              ? "Tại sao không dùng Mean Squared Error (MSE) như Linear Regression? Vì nếu kết hợp MSE với Sigmoid, đồ thị hàm mất mát sẽ gồ ghề (Non-convex) và chứa rất nhiều 'hố' tối ưu cục bộ, khiến Gradient Descent khó tìm được đáy."
-              : "Why not use Mean Squared Error (MSE) like in Linear Regression? Because passing MSE through a Sigmoid creates a non-convex loss surface with many local minima, making it extremely hard for Gradient Descent to find the global minimum."}
-          </p>
-          <p>
-            {isVi ? "Giải pháp là sử dụng Binary Cross-Entropy (Log Loss):" : "The solution is to use Binary Cross-Entropy (Log Loss):"}
-          </p>
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 my-4 flex justify-center overflow-x-auto">
-            <BlockMath math="J(W) = - \frac{1}{m} \sum_{i=1}^{m} \left[ y^{(i)} \log(\hat{y}^{(i)}) + (1 - y^{(i)}) \log(1 - \hat{y}^{(i)}) \right]" />
+            </div>
+            <div className="border-t border-slate-700/50 pt-4">
+              <div className="text-sm text-slate-400 mb-2 font-semibold">3. {isVi ? "Hàm mất mát (Log Loss / Cross-Entropy)" : "Cost Function (Log Loss)"}</div>
+              <BlockMath math="J(W) = - \frac{1}{m} \sum_{i=1}^{m} \left[ y^{(i)} \log(\hat{y}^{(i)}) + (1 - y^{(i)}) \log(1 - \hat{y}^{(i)}) \right]" />
+            </div>
           </div>
           <InfoBox>
             {isVi 
-              ? "Trực giác: Nếu nhãn thực là 1 nhưng dự đoán là 0.001, giá trị log(0.001) sẽ tiến về âm vô cùng, tạo ra một 'hình phạt' cực lớn. Log Loss ép mô hình phải dự đoán đúng với mức độ tự tin cao."
-              : "Intuition: If the true label is 1 but prediction is 0.001, log(0.001) goes to negative infinity, creating a massive penalty. Log Loss forces the model to be confidently correct."}
+              ? "Tại sao không dùng Mean Squared Error (MSE)? Nếu kết hợp MSE với Sigmoid, đồ thị hàm mất mát sẽ gồ ghề và chứa rất nhiều điểm tối ưu cục bộ. Log Loss ép mô hình phải dự đoán đúng với mức độ tự tin cao và luôn có một đáy duy nhất (Convex)."
+              : "Why not use MSE? Passing MSE through a Sigmoid creates a non-convex loss surface with many local minima. Log Loss penalizes confident wrong predictions heavily and is always convex."}
           </InfoBox>
         </Section>
 
-        {/* 7. Training Process */}
-        <Section id="training" title={isVi ? "7. Quá trình Huấn luyện (Training)" : "7. Training Process"}>
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-center p-8 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-            <div className="text-center p-4 bg-slate-100 dark:bg-slate-700 rounded-xl w-32 md:w-40">
-              <Calculator className="w-8 h-8 mx-auto mb-2 text-orange-500" />
-              <div className="font-bold text-sm">{isVi ? "1. Forward Pass" : "1. Forward Pass"}</div>
-              <div className="text-xs text-slate-500 mt-1">{isVi ? "Tính xác suất" : "Calc prob"} <InlineMath math="\hat{y}" /></div>
-            </div>
-            <div className="text-slate-400 font-bold text-xl">→</div>
-            <div className="text-center p-4 bg-slate-100 dark:bg-slate-700 rounded-xl w-32 md:w-40">
-              <ShieldAlert className="w-8 h-8 mx-auto mb-2 text-red-500" />
-              <div className="font-bold text-sm">{isVi ? "2. Tính Loss" : "2. Calc Loss"}</div>
-              <div className="text-xs text-slate-500 mt-1">{isVi ? "So sánh với y thực" : "Compare with true y"}</div>
-            </div>
-            <div className="text-slate-400 font-bold text-xl">→</div>
-            <div className="text-center p-4 bg-orange-500 text-white rounded-xl w-32 md:w-40 shadow-lg shadow-orange-500/30">
-              <GitMerge className="w-8 h-8 mx-auto mb-2 text-orange-100" />
-              <div className="font-bold text-sm">{isVi ? "3. Gradient Descent" : "3. Gradient Descent"}</div>
-              <div className="text-xs text-orange-100 mt-1">{isVi ? "Cập nhật trọng số" : "Update weights"} <InlineMath math="W" /></div>
-            </div>
-          </div>
-          <p className="text-center mt-4 text-sm text-slate-500">
-             {isVi ? "Quá trình này lặp lại liên tục cho đến khi Loss giảm tới mức tối thiểu (Hội tụ)." : "This process repeats iteratively until the Loss is minimized (Convergence)."}
+        {/* 6. Interactive Simulator */}
+        <Section id="simulator" title={isVi ? "Mô phỏng tương tác" : "Interactive Simulator"} icon="🎮">
+          <p className="mb-4 text-sm">
+            {isVi
+              ? 'Thử thêm các điểm của Class A và Class B, sau đó chạy quá trình huấn luyện (Gradient Descent) để tìm ranh giới quyết định (Decision Boundary).'
+              : 'Add points for Class A and Class B, then run training (Gradient Descent) to find the Decision Boundary.'}
           </p>
+          <LogisticSimulator />
         </Section>
 
-        {/* 8. Example Classification */}
-        <Section id="example" title={isVi ? "8. Ví dụ: Dự đoán Học sinh Đậu/Rớt" : "8. Example Classification"}>
-          <p className="mb-4">
-            {isVi 
-              ? "Giả sử mô hình đã học được trọng số W = 1.5 và Bias b = -3. Ta có dữ liệu của một học sinh vừa học 4 tiếng."
-              : "Assume the trained model has Weight W = 1.5 and Bias b = -3. We have a student who studied for 4 hours."}
-          </p>
-          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-100 dark:bg-slate-800">
-                <tr>
-                  <th className="p-4 font-semibold">Step</th>
-                  <th className="p-4 font-semibold">Calculation</th>
-                  <th className="p-4 font-semibold">Result</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                <tr className="bg-white dark:bg-slate-900">
-                  <td className="p-4">1. Linear eq (<InlineMath math="z" />)</td>
-                  <td className="p-4">z = 1.5 * 4 - 3</td>
-                  <td className="p-4 font-bold text-orange-500">3.0</td>
-                </tr>
-                <tr className="bg-slate-50 dark:bg-slate-800/50">
-                  <td className="p-4">2. Sigmoid (<InlineMath math="\hat{y}" />)</td>
-                  <td className="p-4">1 / (1 + e^-3.0)</td>
-                  <td className="p-4 font-bold text-blue-500">~ 0.952 (95.2%)</td>
-                </tr>
-                <tr className="bg-white dark:bg-slate-900">
-                  <td className="p-4">3. Decision</td>
-                  <td className="p-4">0.952 {'>'} 0.5</td>
-                  <td className="p-4 font-bold text-green-500">Pass (Class 1)</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </Section>
-
-        {/* 9. Regularization */}
-        <Section id="regularization" title={isVi ? "9. Điều chuẩn (Regularization)" : "9. Regularization"}>
-          <p>
-            {isVi 
-              ? "Khi mô hình học quá mức các chi tiết nhỏ lẻ trong tập huấn luyện (Overfitting), nó sẽ thất bại trên dữ liệu thực tế. Regularization giúp ép các trọng số nhỏ lại."
-              : "When a model learns the training data too closely including noise (Overfitting), it fails on unseen data. Regularization constrains the weights from getting too large."}
-          </p>
-          <div className="grid md:grid-cols-2 gap-4 mt-4">
-            <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
-              <h4 className="font-bold text-lg mb-2 text-orange-600 dark:text-orange-400">L1 Regularization (Lasso)</h4>
-              <p className="text-sm mb-2">
-                {isVi ? "Cộng thêm giá trị tuyệt đối của trọng số vào hàm Loss." : "Adds the absolute value of magnitude of coefficient as penalty term to the loss function."}
-              </p>
-              <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">Feature Selection (Shrinks to 0)</span>
-            </div>
-            <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
-              <h4 className="font-bold text-lg mb-2 text-orange-600 dark:text-orange-400">L2 Regularization (Ridge)</h4>
-              <p className="text-sm mb-2">
-                {isVi ? "Cộng thêm bình phương của trọng số vào hàm Loss." : "Adds squared magnitude of coefficient as penalty term to the loss function."}
-              </p>
-              <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">Default in Scikit-Learn</span>
-            </div>
-          </div>
-        </Section>
-
-        {/* 10. Multiclass */}
-        <Section id="multiclass" title={isVi ? "10. Multiclass Logistic Regression" : "10. Multiclass Logistic Regression"}>
-           <p>
-             {isVi ? "Mặc định Logistic Regression dùng cho nhị phân (2 lớp). Để phân loại nhiều lớp (VD: Mèo, Chó, Ngựa), ta dùng:" : "Standard Logistic Regression is binary. For multiclass problems (e.g., Cat, Dog, Horse), we use:"}
-           </p>
-           <ul className="list-disc list-inside space-y-2 mt-4 ml-4">
-            <li><strong>One-vs-Rest (OvR):</strong> {isVi ? "Tạo ra N mô hình nhị phân phân loại 'Lớp A' vs 'Phần còn lại'." : "Trains N separate binary classifiers predicting 'Class A' vs 'The Rest'."}</li>
-            <li><strong>Multinomial / Softmax:</strong> {isVi ? "Thay vì Sigmoid, sử dụng hàm Softmax để tính trực tiếp xác suất gộp cho tất cả các lớp, tổng bằng 1." : "Instead of Sigmoid, uses the Softmax function which calculates probabilities for all classes ensuring they sum to 1."}</li>
-          </ul>
-        </Section>
-
-        {/* 11. Advantages and Disadvantages */}
-        <Section id="pros-cons" title={isVi ? "11. Ưu điểm và Nhược điểm" : "11. Advantages and Disadvantages"}>
+        {/* 7. Pros/Cons */}
+        <Section id="pros-cons" title={isVi ? "Ưu & Nhược điểm" : "Pros & Cons"} icon="⚖️">
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-5 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
-              <h4 className="font-bold text-green-700 dark:text-green-400 mb-3">{isVi ? "Ưu điểm" : "Advantages"}</h4>
-              <ul className="list-disc list-inside space-y-2 text-sm text-green-800 dark:text-green-300">
-                <li>{isVi ? "Đơn giản, tốc độ huấn luyện nhanh." : "Simple and extremely fast to train."}</li>
-                <li>{isVi ? "Dễ diễn giải (Trọng số thể hiện tầm quan trọng của đặc trưng)." : "Highly interpretable (weights show feature importance)."}</li>
-                <li>{isVi ? "Hoạt động cực tốt với dữ liệu có thể phân tách tuyến tính." : "Works excellent with linearly separable data."}</li>
-                <li>{isVi ? "Cung cấp rõ ràng xác suất của dự đoán." : "Outputs well-calibrated probabilities."}</li>
+            <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+              <h4 className="font-bold text-emerald-600 dark:text-emerald-400 mb-3 flex items-center gap-2">
+                <span className="text-xl">✅</span> {isVi ? "Ưu điểm" : "Pros"}
+              </h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2"><span className="text-emerald-500 mt-0.5">•</span> <span>{isVi ? "Đơn giản, tốc độ huấn luyện rất nhanh." : "Simple and fast to train."}</span></li>
+                <li className="flex items-start gap-2"><span className="text-emerald-500 mt-0.5">•</span> <span>{isVi ? "Dễ diễn giải: Trọng số (weights) thể hiện trực tiếp mức độ quan trọng của feature." : "Interpretable: Weights directly show feature importance."}</span></li>
+                <li className="flex items-start gap-2"><span className="text-emerald-500 mt-0.5">•</span> <span>{isVi ? "Đưa ra dự đoán dưới dạng xác suất rõ ràng." : "Outputs well-calibrated probabilities."}</span></li>
               </ul>
             </div>
-            <div className="p-5 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
-              <h4 className="font-bold text-red-700 dark:text-red-400 mb-3">{isVi ? "Nhược điểm" : "Disadvantages"}</h4>
-              <ul className="list-disc list-inside space-y-2 text-sm text-red-800 dark:text-red-300">
-                <li>{isVi ? "Giả định ranh giới quyết định là đường thẳng/mặt phẳng." : "Assumes the decision boundary is strictly linear."}</li>
-                <li>{isVi ? "Dễ bị ảnh hưởng bởi nhiễu/Outliers cực đoan." : "Can be sensitive to extreme outliers."}</li>
-                <li>{isVi ? "Khó nắm bắt các mối quan hệ phức tạp, phi tuyến." : "Performs poorly on complex, non-linear relationships."}</li>
-                <li>{isVi ? "Yêu cầu phải chuẩn hoá dữ liệu (Feature Scaling)." : "Requires feature scaling for optimal performance."}</li>
+            <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+              <h4 className="font-bold text-rose-600 dark:text-rose-400 mb-3 flex items-center gap-2">
+                <span className="text-xl">⚠️</span> {isVi ? "Nhược điểm" : "Cons"}
+              </h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2"><span className="text-rose-500 mt-0.5">•</span> <span>{isVi ? "Chỉ hiệu quả nếu dữ liệu có thể phân tách tuyến tính (Linearly separable)." : "Only works well if data is linearly separable."}</span></li>
+                <li className="flex items-start gap-2"><span className="text-rose-500 mt-0.5">•</span> <span>{isVi ? "Dễ bị ảnh hưởng bởi nhiễu (outliers) cực đoan." : "Can be sensitive to extreme outliers."}</span></li>
+                <li className="flex items-start gap-2"><span className="text-rose-500 mt-0.5">•</span> <span>{isVi ? "Yêu cầu phải chuẩn hoá dữ liệu (Feature Scaling) để hội tụ tốt." : "Requires feature scaling for optimal convergence."}</span></li>
               </ul>
             </div>
           </div>
         </Section>
 
-        {/* 12. Visualization */}
-        <Section id="visualization" title={isVi ? "12. Trực quan hoá Hàm Sigmoid" : "12. Visualization Section"}>
-           <div className="flex flex-col md:flex-row gap-6 items-center justify-center bg-slate-50 dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-700">
-              <div className="flex flex-col items-center">
-                <span className="font-bold mb-4">The S-Curve (Sigmoid)</span>
-                <svg width="300" height="200" viewBox="0 0 300 200" className="overflow-visible">
-                  {/* Grid Lines */}
-                  <line x1="20" y1="20" x2="280" y2="20" stroke="currentColor" strokeDasharray="4,4" className="text-slate-300 dark:text-slate-700" />
-                  <text x="5" y="25" fontSize="12" fill="currentColor" className="text-slate-500">1.0</text>
-                  
-                  <line x1="20" y1="100" x2="280" y2="100" stroke="currentColor" strokeDasharray="4,4" className="text-slate-300 dark:text-slate-700" />
-                  <text x="5" y="105" fontSize="12" fill="currentColor" className="text-slate-500">0.5</text>
-                  
-                  {/* X and Y Axes */}
-                  <line x1="20" y1="180" x2="280" y2="180" stroke="currentColor" strokeWidth="2" className="text-slate-400" />
-                  <line x1="150" y1="20" x2="150" y2="180" stroke="currentColor" strokeWidth="2" className="text-slate-400" />
-                  
-                  {/* Sigmoid Curve */}
-                  <path d="M 20 175 Q 120 170 150 100 T 280 25" fill="none" stroke="#f97316" strokeWidth="4" />
-                  
-                  {/* Annotations */}
-                  <circle cx="150" cy="100" r="5" fill="#ef4444" />
-                  <text x="160" y="95" fill="#ef4444" fontSize="12" fontWeight="bold">Threshold (0.5)</text>
-                  
-                  <text x="270" y="195" fill="currentColor" fontSize="12" className="text-slate-500">+z</text>
-                  <text x="20" y="195" fill="currentColor" fontSize="12" className="text-slate-500">-z</text>
-                </svg>
-              </div>
-           </div>
-           <p className="text-center mt-3 text-sm text-slate-500">
-             {isVi ? "Đường cong Sigmoid bóp mọi giá trị của z (từ -∞ đến +∞) về đoạn [0,1]." : "The Sigmoid curve squashes any value of z (from -∞ to +∞) into the [0,1] range."}
-           </p>
-        </Section>
-
-        {/* 13. Python Implementation */}
-        <Section id="python" title={isVi ? "13. Triển khai Python" : "13. Python Implementation"}>
+        {/* 8. Python Code */}
+        <Section id="python" title={isVi ? "Triển khai Python" : "Python Implementation"} icon="💻">
           <p className="mb-4">
             {isVi 
-              ? "Triển khai Logistic Regression với Scikit-Learn (có áp dụng Feature Scaling chuẩn hoá dữ liệu):"
-              : "Implementing Logistic Regression with Scikit-Learn (including mandatory Feature Scaling):"}
+              ? "Sử dụng Scikit-Learn với bước chuẩn hóa dữ liệu quan trọng (StandardScaler):"
+              : "Using Scikit-Learn with the crucial feature scaling step (StandardScaler):"}
           </p>
-          <div className="rounded-xl overflow-hidden shadow-lg border border-slate-700">
-            <SyntaxHighlighter language="python" style={vscDarkPlus} showLineNumbers>
+          <div className="rounded-2xl overflow-hidden border border-slate-700 shadow-xl">
+            <div className="bg-slate-900 px-4 py-2 flex items-center gap-2 border-b border-slate-800">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-rose-500"></div>
+                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+              </div>
+              <span className="text-xs text-slate-400 font-mono ml-2">logistic_regression.py</span>
+            </div>
+            <SyntaxHighlighter language="python" style={vscDarkPlus} showLineNumbers customStyle={{ margin: 0, padding: '1.5rem', background: '#0f172a' }}>
               {pythonCode}
             </SyntaxHighlighter>
           </div>
         </Section>
-
-        {/* 14. Real World Applications */}
-        <Section id="applications" title={isVi ? "14. Ứng dụng thực tế" : "14. Real World Applications"}>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {[
-              'Email Spam Detection', 'Disease Prediction', 
-              'Customer Churn Prediction', 'Loan Approval', 
-              'Credit Card Fraud', 'Ad Click-Through Rate'
-            ].map((app, idx) => (
-              <div key={idx} className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-center font-medium text-slate-700 dark:text-slate-300">
-                {app}
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        {/* 15. Comparison */}
-        <Section id="comparison" title={isVi ? "15. So sánh thuật toán" : "15. Comparison with Other Algorithms"}>
-          <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-100 dark:bg-slate-800">
-                <tr>
-                  <th className="p-4 font-semibold">Algorithm</th>
-                  <th className="p-4 font-semibold">Purpose</th>
-                  <th className="p-4 font-semibold">Outputs Probability?</th>
-                  <th className="p-4 font-semibold">Non-Linear?</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                <tr className="bg-orange-50 dark:bg-orange-900/10">
-                  <td className="p-4 font-bold text-orange-600 dark:text-orange-400">Logistic Regression</td>
-                  <td className="p-4">Classification</td>
-                  <td className="p-4">Yes (Directly)</td>
-                  <td className="p-4">No</td>
-                </tr>
-                <tr className="bg-white dark:bg-slate-900">
-                  <td className="p-4 font-medium">Linear Regression</td>
-                  <td className="p-4">Regression</td>
-                  <td className="p-4">No</td>
-                  <td className="p-4">No</td>
-                </tr>
-                <tr className="bg-slate-50 dark:bg-slate-800/50">
-                  <td className="p-4 font-medium">SVM</td>
-                  <td className="p-4">Classification</td>
-                  <td className="p-4">No (requires Platt scaling)</td>
-                  <td className="p-4">Yes (with Kernels)</td>
-                </tr>
-                <tr className="bg-white dark:bg-slate-900">
-                  <td className="p-4 font-medium">Decision Tree</td>
-                  <td className="p-4">Both</td>
-                  <td className="p-4">Yes (Fractions)</td>
-                  <td className="p-4">Yes</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </Section>
-
-        {/* 16. Complexity Analysis */}
-        <Section id="complexity" title={isVi ? "16. Phân tích độ phức tạp" : "16. Complexity Analysis"}>
-           <ul className="space-y-3">
-            <li>
-              <strong>{isVi ? "Huấn luyện (Training):" : "Training:"} </strong> 
-              <InlineMath math="O(n \cdot d \cdot I)" /> 
-              <span className="ml-2 text-sm text-slate-500">{isVi ? "(n = số mẫu, d = features, I = iterations)" : "(n = samples, d = features, I = iterations)"}</span>
-            </li>
-            <li>
-              <strong>{isVi ? "Dự đoán (Prediction):" : "Prediction:"} </strong> 
-              <InlineMath math="O(d)" />
-              <span className="ml-2 text-sm text-slate-500">{isVi ? "(cực kỳ nhanh vì chỉ cần nhân ma trận 1 lần)" : "(extremely fast due to simple dot product)"}</span>
-            </li>
-            <li>
-              <strong>{isVi ? "Bộ nhớ (Memory):" : "Memory:"} </strong> 
-              <InlineMath math="O(d)" />
-              <span className="ml-2 text-sm text-slate-500">{isVi ? "(chỉ cần lưu trọng số W)" : "(only need to store weights W)"}</span>
-            </li>
-          </ul>
-        </Section>
-
-        {/* 17. FAQ */}
-        <Section id="faq" title={isVi ? "17. Câu hỏi phỏng vấn (FAQ)" : "17. Interview Questions"}>
-          <div className="space-y-3">
-            {faqs.map((faq, idx) => (
-              <div key={idx} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800">
-                <button 
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full p-4 text-left font-bold flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
-                >
-                  {faq.q}
-                  {openFaq === idx ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                </button>
-                <AnimatePresence>
-                  {openFaq === idx && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }} 
-                      animate={{ height: 'auto', opacity: 1 }} 
-                      exit={{ height: 0, opacity: 0 }}
-                      className="px-4 pb-4 text-slate-600 dark:text-slate-400"
-                    >
-                      {faq.a}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        {/* 18. Summary */}
-        <Section id="summary" title={isVi ? "18. Tổng kết" : "18. Summary Section"}>
-          <div className="p-8 rounded-3xl bg-gradient-to-r from-orange-50 to-red-50 dark:from-slate-800 dark:to-orange-900/20 border border-orange-100 dark:border-orange-800 shadow-md">
-            <h3 className="text-2xl font-bold mb-4 text-orange-700 dark:text-orange-400">
-              {isVi ? "Ghi nhớ cốt lõi" : "Core Takeaways"}
-            </h3>
-            <ul className="list-disc list-inside space-y-2 text-lg leading-relaxed text-slate-700 dark:text-slate-300">
-              <li>{isVi ? "Là mô hình Phân loại (Classification), không phải dự đoán số thực liên tục." : "It is a Classification model, not a standard continuous regression model."}</li>
-              <li>{isVi ? "Sử dụng hàm Sigmoid để ánh xạ kết quả hồi quy về xác suất [0-1]." : "Uses the Sigmoid function to map linear outputs into probabilities [0-1]."}</li>
-              <li>{isVi ? "Chạy Gradient Descent để tối ưu hóa hàm Log Loss (Cross-Entropy)." : "Runs Gradient Descent to minimize the Log Loss (Cross-Entropy) function."}</li>
-              <li>{isVi ? "Siêu nhanh, tốn ít bộ nhớ, giải thích được tính năng (Feature interpretability)." : "Super fast, memory efficient, and offers excellent feature interpretability."}</li>
-            </ul>
-          </div>
-        </Section>
-
       </div>
 
       {/* Table of contents sidebar */}
       <div className="hidden lg:block lg:w-1/4">
-        <div className="sticky top-24 p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
-          <h3 className="font-bold text-lg mb-4 text-orange-600 dark:text-orange-400">{isVi ? "Nội dung" : "Contents"}</h3>
-          <nav className="flex flex-col space-y-2 text-sm overflow-y-auto max-h-[75vh] custom-scrollbar">
+        <div className="sticky top-24 p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/20 dark:shadow-none">
+          <h3 className="font-bold text-lg mb-4 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+            {isVi ? "Nội dung" : "Contents"}
+          </h3>
+          <nav className="flex flex-col space-y-2.5 text-sm font-medium">
             {[
-              { id: 'hero', text: isVi ? "1. Hero" : "1. Hero" },
-              { id: 'intro', text: isVi ? "2. Giới thiệu" : "2. Intro" },
+              { id: 'hero', text: isVi ? "1. Tổng quan" : "1. Overview" },
+              { id: 'intro', text: isVi ? "2. Giới thiệu" : "2. Introduction" },
               { id: 'intuition', text: isVi ? "3. Trực giác" : "3. Intuition" },
               { id: 'sigmoid', text: isVi ? "4. Hàm Sigmoid" : "4. Sigmoid" },
-              { id: 'math', text: isVi ? "5. Toán học" : "5. Math" },
-              { id: 'cost', text: isVi ? "6. Hàm Loss" : "6. Cost Function" },
-              { id: 'training', text: isVi ? "7. Huấn luyện" : "7. Training" },
-              { id: 'example', text: isVi ? "8. Ví dụ" : "8. Example" },
-              { id: 'regularization', text: isVi ? "9. Điều chuẩn" : "9. Regularization" },
-              { id: 'multiclass', text: isVi ? "10. Phân nhiều lớp" : "10. Multiclass" },
-              { id: 'pros-cons', text: isVi ? "11. Ưu / Nhược" : "11. Pros & Cons" },
-              { id: 'visualization', text: isVi ? "12. Trực quan hoá" : "12. Visuals" },
-              { id: 'python', text: isVi ? "13. Code Python" : "13. Python" },
-              { id: 'applications', text: isVi ? "14. Ứng dụng" : "14. Applications" },
-              { id: 'comparison', text: isVi ? "15. So sánh" : "15. Comparison" },
-              { id: 'complexity', text: isVi ? "16. Độ phức tạp" : "16. Complexity" },
-              { id: 'faq', text: isVi ? "17. Câu hỏi" : "17. FAQ" },
-              { id: 'summary', text: isVi ? "18. Tổng kết" : "18. Summary" },
+              { id: 'math', text: isVi ? "5. Nền tảng Toán học" : "5. Math" },
+              { id: 'simulator', text: isVi ? "6. Mô phỏng tương tác" : "6. Simulator" },
+              { id: 'pros-cons', text: isVi ? "7. Ưu / Nhược" : "7. Pros & Cons" },
+              { id: 'python', text: isVi ? "8. Code Python" : "8. Python" },
             ].map(item => (
               <a 
                 key={item.id} 
                 href={`#${item.id}`} 
-                className="text-slate-600 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                className="text-slate-500 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors flex items-center gap-2"
               >
+                <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></div>
                 {item.text}
               </a>
             ))}

@@ -60,7 +60,7 @@ export default function Home() {
     >
       <div className="max-w-3xl">
         <motion.div variants={itemVariants} className="inline-block px-4 py-1.5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-medium text-sm mb-6">
-          {t('home.greeting')} Nitro
+          {t('home.greeting')} KaSao
         </motion.div>
         
         <motion.h1 variants={itemVariants} className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-500 dark:from-white dark:to-slate-400">

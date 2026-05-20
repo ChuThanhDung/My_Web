@@ -23,16 +23,16 @@ async def lifespan(app):
     try:
         from seed import seed
         seed()
-        print("✅ Auto-seed completed")
+        print("[OK] Auto-seed completed")
     except Exception as e:
-        print(f"⚠️ Seed skipped: {e}")
+        print(f"[SKIP] Seed skipped: {e}")
     yield
 
 app = FastAPI(title="ML Portfolio API", lifespan=lifespan)
 
 @app.get("/")
 def root():
-    return {"message": "ML Portfolio API is running 🚀", "docs": "/docs", "status": "ok"}
+    return {"message": "ML Portfolio API is running", "docs": "/docs", "status": "ok"}
 
 # CORS setup
 allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "*")

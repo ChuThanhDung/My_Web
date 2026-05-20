@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import MachineLearning from './pages/MachineLearning';
 import TopicDetails from './pages/TopicDetails';
 import Admin from './pages/Admin';
+import Contact from './pages/Contact';
 
 const Placeholder = ({ title }: { title: string }) => (
   <div className="flex items-center justify-center h-[60vh]">
@@ -21,7 +22,7 @@ function App() {
         <Route path="admin" element={<Admin />} />
         <Route path="projects" element={<Placeholder title="Projects" />} />
         <Route path="about" element={<Placeholder title="About" />} />
-        <Route path="contact" element={<Placeholder title="Contact" />} />
+        <Route path="contact" element={<Contact />} />
       </Route>
     </Routes>
   );
