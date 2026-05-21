@@ -27,7 +27,7 @@ export default function TopicDetails() {
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="py-8 max-w-4xl"
+      className="py-8 w-full max-w-none px-2 md:px-0"
     >
       {/* Back button */}
       <motion.div

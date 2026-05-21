@@ -16,7 +16,19 @@ export default function ThemeToggle() {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
+    window.dispatchEvent(new Event('theme-changed'));
   }, [isDark]);
+
+  useEffect(() => {
+    const handleSync = () => {
+      const saved = localStorage.getItem('theme');
+      if (saved) {
+        setIsDark(saved === 'dark');
+      }
+    };
+    window.addEventListener('theme-changed', handleSync);
+    return () => window.removeEventListener('theme-changed', handleSync);
+  }, []);
 
   return (
     <button

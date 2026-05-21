@@ -2,6 +2,7 @@
   "nav": {
     "home": "Trang chủ",
     "ml": "Machine Learning",
+    "sampling": "Phương pháp Lấy mẫu",
     "projects": "Dự án",
     "about": "Giới thiệu",
     "contact": "Liên hệ"
@@ -9,8 +10,36 @@
   "home": {
     "greeting": "Xin chào, tôi là",
     "role": "Nhìn được dòng chữ này, hẳn không phải người thường",
-    "intro": "Tôi xây dựng các ứng dụng mở rộng và tạo ra những trải nghiệm web hiện đại. Đam mê với mã nguồn sạch, các hệ thống thông minh và không ngừng học hỏi.",
-    "cta_primary": "Xem Dự án"
+    "intro": "Khám phá và trực quan hóa các thuật toán Machine Learning cốt lõi cùng các phương pháp Lấy mẫu khoa học. Tìm hiểu cách thu thập dữ liệu thông minh và xây dựng các mô hình dự đoán hiệu quả.",
+    "cta_primary": "Xem Dự án",
+    "pro_tools": {
+      "title": "Công cụ chuyên nghiệp.",
+      "tool_1_title": "Tinh chỉnh tối đa",
+      "tool_1_desc": "Phân cụm và tinh chỉnh dữ liệu nhiều chiều phức tạp với độ chính xác cao.",
+      "tool_1_action": "Xáo trộn Tọa độ",
+      "tool_1_centroid_a": "Tâm cụm A",
+      "tool_1_centroid_b": "Tâm cụm B",
+      "tool_2_title": "Kiểm soát thủ công",
+      "tool_2_desc": "Toàn quyền kiểm soát luồng xử lý từ thu thập đến suy diễn dữ liệu.",
+      "tool_2_status_idle": "Hệ thống sẵn sàng. Chọn một bước để thực thi...",
+      "tool_2_status_in": "[SYS] Đang nạp: 2,048 mẫu dữ liệu. Độ trễ: 1.2ms",
+      "tool_2_status_proc": "[SYS] Đang xử lý: Tối ưu số chiều (d=128). Sai số: 0.043",
+      "tool_2_status_out": "[SYS] Suy diễn: Trích xuất đặc trưng thành công.",
+      "tool_3_title": "Giao diện tùy chỉnh",
+      "tool_3_desc": "Chủ đề hiển thị được cá nhân hóa nhằm tối ưu trải nghiệm đọc tốt nhất.",
+      "theme_dark": "Tối",
+      "theme_light": "Sáng",
+      "theme_kino": "Kino",
+      "kino_toast": "Kích hoạt chế độ điện ảnh KINO!",
+      "tool_4_title": "Phản hồi trực quan",
+      "tool_4_desc": "Hệ thống phản hồi tương tác thời gian thực xây dựng trên các mẫu phản ứng sạch.",
+      "tool_4_play": "Chạy",
+      "tool_4_pause": "Dừng",
+      "tool_4_bass": "Bass",
+      "tool_4_mid": "Mid",
+      "tool_4_treble": "Treble",
+      "tool_4_boost": "Boost"
+    }
   },
   "ml": {
     "title": "Chủ đề Machine Learning",
@@ -36,5 +65,45 @@
       "desc": "Máy học vector hỗ trợ (SVM) cho bài toán phân loại và hồi quy."
     },
     "learn_more": "Tìm hiểu thêm →"
+  },
+  "sampling": {
+    "title": "Phương pháp Lấy mẫu",
+    "subtitle": "Khám phá các phương pháp khoa học để chọn các mẫu đại diện từ quần thể lớn.",
+    "simple_random": {
+      "title": "Lấy mẫu Ngẫu nhiên Đơn giản",
+      "desc": "Mỗi cá thể trong quần thể đều có cơ hội được lựa chọn hoàn toàn ngang nhau."
+    },
+    "stratified": {
+      "title": "Lấy mẫu Phân lớp",
+      "desc": "Chia quần thể thành các nhóm nhỏ (lớp) và lấy mẫu từ mỗi lớp theo tỷ lệ tương ứng."
+    },
+    "systematic": {
+      "title": "Lấy mẫu Hệ thống",
+      "desc": "Lựa chọn các phần tử theo các khoảng cách toán học cố định, đều đặn từ danh sách đã sắp xếp."
+    },
+    "cluster": {
+      "title": "Lấy mẫu Cụm",
+      "desc": "Chia quần thể thành các cụm tự nhiên, sau đó chọn ngẫu nhiên toàn bộ các cụm để nghiên cứu."
+    }
+  },
+  "about": {
+    "title": "Giới thiệu KaSao",
+    "subtitle": "Cổng thông tin giáo dục và tương tác trực quan cho Machine Learning và Khoa học Lấy mẫu.",
+    "intro": "KaSao được xây dựng nhằm thu hẹp khoảng cách giữa các công thức học thuật khô khan và trực giác hình ảnh. Bằng cách kết hợp toán học nghiêm ngặt với các mô phỏng tương tác hiện đại, chúng tôi giúp các khái niệm dữ liệu phức tạp trở nên dễ tiếp cận và sinh động hơn.",
+    "features_title": "Các Tính năng Cốt lõi",
+    "ml_title": "Phòng thí nghiệm Machine Learning",
+    "ml_desc": "Khám phá các thuật toán cơ bản (PCA, K-Means, Naive Bayes, Hồi quy Logistic, SVM) với khung lý thuyết chi tiết, suy diễn công thức toán học và các bước thực hiện rõ ràng.",
+    "sampling_title": "Bộ mô phỏng Lấy mẫu Tương tác",
+    "sampling_desc": "Cấu hình quy mô quần thể, phân lớp nhóm phụ, xác định khoảng bước nhảy và trực quan hóa phân cụm ngẫu nhiên theo thời gian thực bằng bộ mô phỏng HTML5 Canvas tùy chỉnh.",
+    "academic_title": "Độ chính xác Học thuật (KaTeX)",
+    "academic_desc": "Xem các định nghĩa toán học chuẩn mực. Từ công thức Cochranes, phân bổ Neyman đến hiệu ứng thiết kế (Deff), tất cả công thức đều được kết xuất chất lượng cao qua LaTeX.",
+    "ui_title": "Giao diện Điện ảnh & Tương tác",
+    "ui_desc": "Trải nghiệm giao diện thiết kế phong cách báo chí cao cấp với nền lưới hạt tương tác vật lý, các chế độ sáng/tối/điện ảnh và các chuyển động micro-animation mượt mà.",
+    "tech_title": "Kiến trúc Công nghệ Hệ thống",
+    "tech_desc": "Được xây dựng trên nền tảng kiến trúc phần mềm hiện đại nhằm đảm bảo hiệu năng tối ưu, tính tiếp cận cao và mã nguồn sạch.",
+    "tech_frontend": "Ứng dụng Frontend",
+    "tech_frontend_details": "React 19, TypeScript, Vite 8, Tailwind CSS, Framer Motion mang lại giao diện và hiệu ứng chuyển động cao cấp.",
+    "tech_backend": "Dịch vụ Backend",
+    "tech_backend_details": "FastAPI (Python 3.12+), SQLAlchemy ORM, cơ sở dữ liệu SQLite cung cấp API xử lý hiệu năng vượt trội."
   }
 }

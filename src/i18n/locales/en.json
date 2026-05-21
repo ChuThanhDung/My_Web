@@ -2,6 +2,7 @@
   "nav": {
     "home": "Home",
     "ml": "Machine Learning",
+    "sampling": "Sampling Techniques",
     "projects": "Projects",
     "about": "About",
     "contact": "Contact"
@@ -9,8 +10,36 @@
   "home": {
     "greeting": "Hello, I'm",
     "role": "If you can read this, you must not be an ordinary person",
-    "intro": "I build scalable applications and craft modern web experiences. Passionate about clean code, intelligent systems, and continuous learning.",
-    "cta_primary": "View Projects"
+    "intro": "Explore and visualize core Machine Learning algorithms and scientific Sampling methods. Learn how to collect data intelligently and build robust predictive models.",
+    "cta_primary": "View Projects",
+    "pro_tools": {
+      "title": "Pro Tools.",
+      "tool_1_title": "Tailor to tiny",
+      "tool_1_desc": "Fine-tune and cluster complex multidimensional data with precision.",
+      "tool_1_action": "Shuffle Coordinates",
+      "tool_1_centroid_a": "Centroid A",
+      "tool_1_centroid_b": "Centroid B",
+      "tool_2_title": "Just manual",
+      "tool_2_desc": "Full pipeline execution control from ingestion to inference.",
+      "tool_2_status_idle": "System ready. Select a step to execute...",
+      "tool_2_status_in": "[SYS] Ingesting: 2,048 samples loaded. Latency: 1.2ms",
+      "tool_2_status_proc": "[SYS] Processing: Dimensions tuned (d=128). Loss: 0.043",
+      "tool_2_status_out": "[SYS] Inference: Projections completed successfully.",
+      "tool_3_title": "Custom looks",
+      "tool_3_desc": "Personalized visual themes designed for maximum reading clarity.",
+      "theme_dark": "Dark",
+      "theme_light": "Light",
+      "theme_kino": "Kino",
+      "kino_toast": "KINO Cinematic Mode Activated!",
+      "tool_4_title": "Audio meters",
+      "tool_4_desc": "Interactive feedback systems built with clean, reactive patterns.",
+      "tool_4_play": "Play",
+      "tool_4_pause": "Pause",
+      "tool_4_bass": "Bass",
+      "tool_4_mid": "Mid",
+      "tool_4_treble": "Treble",
+      "tool_4_boost": "Boost"
+    }
   },
   "ml": {
     "title": "Machine Learning Topics",
@@ -36,5 +65,45 @@
       "desc": "Support Vector Machines for robust classification and regression."
     },
     "learn_more": "Learn more →"
+  },
+  "sampling": {
+    "title": "Sampling Techniques",
+    "subtitle": "Discover scientific methods to select representative samples from large populations.",
+    "simple_random": {
+      "title": "Simple Random Sampling",
+      "desc": "Every individual in the population has an exactly equal chance of being selected."
+    },
+    "stratified": {
+      "title": "Stratified Sampling",
+      "desc": "Splits the population into key subgroups (strata) and samples from each proportionally."
+    },
+    "systematic": {
+      "title": "Systematic Sampling",
+      "desc": "Selects elements at a regular, fixed mathematical interval from an ordered list."
+    },
+    "cluster": {
+      "title": "Cluster Sampling",
+      "desc": "Divides population into natural clusters, then randomly chooses entire clusters to study."
+    }
+  },
+  "about": {
+    "title": "About KaSao",
+    "subtitle": "An educational and interactive web portal for Machine Learning and Sampling science.",
+    "intro": "KaSao was built to bridge the gap between academic formulas and visual intuition. By combining rigorous mathematics with modern, interactive simulations, we make complex data concepts accessible and engaging.",
+    "features_title": "Core Platform Features",
+    "ml_title": "Machine Learning Lab",
+    "ml_desc": "Explore core algorithms (PCA, K-Means, Naive Bayes, Logistic Regression, SVM) with detailed theoretical frameworks, formula derivations, and step-by-step explanations.",
+    "sampling_title": "Interactive Sampling Simulators",
+    "sampling_desc": "Configure population sizes, stratify groupings, define step intervals, and visualize random cluster selections in real-time using custom HTML5 canvas simulators.",
+    "academic_title": "Academic Rigor (KaTeX)",
+    "academic_desc": "Review clear mathematical definitions. From Cochrane's formula to Neyman Allocation and Design Effects, all formulas are rendered in high-fidelity LaTeX.",
+    "ui_title": "Cinematic UI & Interaction",
+    "ui_desc": "Experience a premium editorial interface with particle physics backgrounds, responsive dark/light/cinematic modes, and smooth micro-animations.",
+    "tech_title": "Platform Technology Stack",
+    "tech_desc": "Built with modern software architecture to ensure speed, accessibility, and clean design patterns.",
+    "tech_frontend": "Frontend Client",
+    "tech_frontend_details": "React 19, TypeScript, Vite 8, Tailwind CSS, Framer Motion for premium web layout and animations.",
+    "tech_backend": "Backend Services",
+    "tech_backend_details": "FastAPI (Python 3.12+), SQLAlchemy ORM, SQLite database for high-performance API endpoint services."
   }
 }

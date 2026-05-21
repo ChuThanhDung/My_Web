@@ -19,7 +19,7 @@ export default function Contact() {
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="flex flex-col gap-16 pt-8 md:pt-16 max-w-4xl mx-auto"
+      className="flex flex-col gap-16 pt-8 md:pt-16 max-w-7xl mx-auto"
     >
       {/* Header */}
       <motion.div

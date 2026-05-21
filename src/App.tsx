@@ -4,8 +4,11 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import MachineLearning from './pages/MachineLearning';
 import TopicDetails from './pages/TopicDetails';
+import SamplingTechniques from './pages/SamplingTechniques';
+import SamplingDetails from './pages/SamplingDetails';
 import Admin from './pages/Admin';
 import Contact from './pages/Contact';
+import About from './pages/About';
 import { motion } from 'framer-motion';
 
 const Placeholder = ({ title }: { title: string }) => (
@@ -29,9 +32,11 @@ function AnimatedRoutes() {
           <Route index           element={<Home />} />
           <Route path="ml"       element={<MachineLearning />} />
           <Route path="ml/:topicId" element={<TopicDetails />} />
+          <Route path="sampling" element={<SamplingTechniques />} />
+          <Route path="sampling/:samplingId" element={<SamplingDetails />} />
           <Route path="admin"    element={<Admin />} />
           <Route path="projects" element={<Placeholder title="Projects" />} />
-          <Route path="about"    element={<Placeholder title="About" />} />
+          <Route path="about"    element={<About />} />
           <Route path="contact"  element={<Contact />} />
         </Route>
       </Routes>

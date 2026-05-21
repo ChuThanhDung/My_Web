@@ -6,13 +6,13 @@ import { useEffect, useRef } from 'react';
 import { useIsDark } from '../hooks/useIsDark';
 
 // ─── Theme token maps ────────────────────────────────────────────────────────
-const DARK_BG   = '#020617';            // slate-950
+const DARK_BG   = '#000000';            // pitch black
 const LIGHT_BG  = '#f1f5f9';            // slate-100
 
-const DARK_PARTICLES  = ['#818cf8', '#a78bfa', '#f472b6', '#38bdf8', '#2dd4bf'];
+const DARK_PARTICLES  = ['#ffffff', '#e2ff3b', '#a78bfa', '#38bdf8', '#eab308']; // high-contrast white & accent yellow
 const LIGHT_PARTICLES = ['#6366f1', '#8b5cf6', '#db2777', '#0284c7', '#0d9488'];
 
-const DARK_LINK_COLOR  = 'rgba(129,140,248,';   // indigo glow
+const DARK_LINK_COLOR  = 'rgba(255,255,255,';   // white glow
 const LIGHT_LINK_COLOR = 'rgba(99,102,241,';    // indigo muted
 
 // ─── Particle Canvas ─────────────────────────────────────────────────────────
@@ -179,22 +179,22 @@ export default function Layout() {
 
   const bg          = isDark ? DARK_BG  : LIGHT_BG;
   const gradientA   = isDark
-    ? 'radial-gradient(circle at 80% 20%, rgba(99,102,241,0.13) 0%, transparent 50%)'
+    ? 'radial-gradient(circle at 80% 20%, rgba(226,255,59,0.08) 0%, transparent 50%)'
     : 'radial-gradient(circle at 80% 20%, rgba(99,102,241,0.08) 0%, transparent 50%)';
   const gradientB   = isDark
-    ? 'radial-gradient(circle at 20% 80%, rgba(236,72,153,0.09) 0%, transparent 50%)'
+    ? 'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.05) 0%, transparent 50%)'
     : 'radial-gradient(circle at 20% 80%, rgba(236,72,153,0.06) 0%, transparent 50%)';
   const headerBg    = isDark
-    ? 'rgba(2,6,23,0.75)'
+    ? 'rgba(0,0,0,0.85)'
     : 'rgba(241,245,249,0.80)';
   const headerBorder = isDark
-    ? 'rgba(255,255,255,0.07)'
+    ? 'rgba(255,255,255,0.12)'
     : 'rgba(0,0,0,0.08)';
-  const textColor   = isDark ? '#fff' : '#0f172a';
+  const textColor   = isDark ? '#ffffff' : '#0f172a';
 
   return (
     <div
-      className="flex flex-col md:flex-row min-h-screen relative overflow-hidden"
+      className="flex flex-col min-h-screen relative overflow-hidden"
       style={{ background: bg, transition: 'background 0.5s ease' }}
     >
       <ParticleCanvas isDark={isDark} />
@@ -230,7 +230,7 @@ export default function Layout() {
           </div>
         </div>
 
-        <div className="p-4 md:p-8 lg:p-12 max-w-7xl mx-auto">
+        <div className="p-4 md:p-8 lg:p-12 w-full max-w-none mx-auto">
           <Outlet />
         </div>
       </main>

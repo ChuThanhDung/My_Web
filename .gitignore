@@ -26,9 +26,9 @@ dist-ssr
 
 # Python / Backend
 backend/venv/
-backend/__pycache__/
-backend/*.pyc
-backend/*.pyo
+__pycache__/
+*.pyc
+*.pyo
 backend/.env
 
 # SQLite DB — không commit DB lên git
