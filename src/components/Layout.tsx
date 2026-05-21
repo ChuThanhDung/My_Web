@@ -37,7 +37,7 @@ function ParticleCanvas({ isDark }: ParticleCanvasProps) {
       size = 0; color = ''; opacity = 0;
 
       init() {
-        const w = canvas.width / dpr, h = canvas.height / dpr;
+        const w = canvas!.width / dpr, h = canvas!.height / dpr;
         this.size    = Math.random() * 2 + 1.2;
         this.x       = Math.random() * (w - this.size * 4) + this.size * 2;
         this.y       = Math.random() * (h - this.size * 4) + this.size * 2;
@@ -66,7 +66,7 @@ function ParticleCanvas({ isDark }: ParticleCanvasProps) {
       }
 
       update() {
-        const w = canvas.width / dpr, h = canvas.height / dpr;
+        const w = canvas!.width / dpr, h = canvas!.height / dpr;
         if (this.x < this.size || this.x > w - this.size) { this.vx = -this.vx; this.bvx = -this.bvx; }
         if (this.y < this.size || this.y > h - this.size) { this.vy = -this.vy; this.bvy = -this.bvy; }
         if (mouse.x !== null && mouse.y !== null) {
@@ -97,8 +97,8 @@ function ParticleCanvas({ isDark }: ParticleCanvasProps) {
 
     function resize() {
       dpr = window.devicePixelRatio || 1;
-      canvas.width  = window.innerWidth  * dpr;
-      canvas.height = window.innerHeight * dpr;
+      canvas!.width  = window.innerWidth  * dpr;
+      canvas!.height = window.innerHeight * dpr;
       ctx.scale(dpr, dpr);
       spawnParticles();
     }
@@ -124,7 +124,7 @@ function ParticleCanvas({ isDark }: ParticleCanvasProps) {
     }
 
     function loop() {
-      ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+      ctx.clearRect(0, 0, canvas!.width / dpr, canvas!.height / dpr);
       for (const p of particles) p.update();
       connect();
       animId = requestAnimationFrame(loop);

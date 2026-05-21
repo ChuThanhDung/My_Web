@@ -67,7 +67,7 @@ export const cardHover = {
 export const floatAnimation = {
   animate: {
     y: [0, -10, 0],
-    transition: { duration: 4, repeat: Infinity, ease: 'easeInOut' },
+    transition: { duration: 4, repeat: Infinity, ease: 'easeInOut' as const },
   },
 };
 

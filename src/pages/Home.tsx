@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'fram
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, BrainCircuit, FolderOpen, User, Mail, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { pageEnter, stagger, fadeUp, zoomReveal, cardHover, floatAnimation, inViewport } from '../lib/motion';
 import { useIsDark } from '../hooks/useIsDark';
 
