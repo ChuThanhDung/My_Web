@@ -56,6 +56,16 @@ class QuizQuestion(QuizQuestionBase):
     class Config:
         from_attributes = True
 
+class QuizQuestionPublic(BaseModel):
+    id: int
+    topic: str
+    question_en: str
+    question_vi: str
+    options_en: str
+    options_vi: str
+    class Config:
+        from_attributes = True
+
 class QuizSubmit(BaseModel):
     answers: dict[int, int]  # question_id -> selected_option_index
 
