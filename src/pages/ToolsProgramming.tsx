@@ -1,80 +1,56 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Shuffle, Layers, Hash, Boxes, ArrowRight, BarChart3, TrendingUp } from 'lucide-react';
+import { Terminal, Cpu, Database, ArrowRight } from 'lucide-react';
 import { useRef } from 'react';
 import { pageEnter, stagger, fadeUp, zoomReveal, inViewport } from '../lib/motion';
 import { useIsDark } from '../hooks/useIsDark';
 
-interface SamplingMethod {
+interface ToolTopic {
   id: string;
   slug: string;
-  icon: typeof Shuffle;
+  icon: typeof Terminal;
   glow: string;
   badges_en: string[];
   badges_vi: string[];
 }
 
-const METHODS: SamplingMethod[] = [
+const TOPICS: ToolTopic[] = [
   {
-    id: 'simple_random',
-    slug: 'simple_random',
-    icon: Shuffle,
-    glow: '#e2ff3b', // Lime accent
-    badges_en: ['Equal Probability', 'Pure Randomness', 'Gold Standard'],
-    badges_vi: ['Xác suất Đồng đều', 'Ngẫu nhiên Thuần túy', 'Tiêu chuẩn Vàng']
+    id: 'analysis_languages',
+    slug: 'analysis_languages',
+    icon: Terminal,
+    glow: '#8b5cf6', // Violet
+    badges_en: ['Python vs R', 'Stats & Academic Viz', 'Pandas & Statsmodels'],
+    badges_vi: ['Python vs R', 'Thống kê & Biểu đồ', 'Pandas & Statsmodels']
   },
   {
-    id: 'stratified',
-    slug: 'stratified',
-    icon: Layers,
-    glow: '#10b981', // Emerald accent
-    badges_en: ['Homogeneous Strata', 'High Precision', 'Subgroup Coverage'],
-    badges_vi: ['Phân lớp Đồng nhất', 'Độ chính xác Cao', 'Bao phủ Nhóm phụ']
+    id: 'classical_software',
+    slug: 'classical_software',
+    icon: Cpu,
+    glow: '#6366f1', // Indigo
+    badges_en: ['SPSS GUI', 'Stata Console', 'EViews Econometrics'],
+    badges_vi: ['SPSS GUI', 'Stata Console', 'Kinh tế lượng EViews']
   },
   {
-    id: 'systematic',
-    slug: 'systematic',
-    icon: Hash,
-    glow: '#3b82f6', // Blue accent
-    badges_en: ['Regular Interval (k)', 'Operational Ease', 'Uniform Spread'],
-    badges_vi: ['Bước nhảy Định kỳ (k)', 'Vận hành Dễ dàng', 'Trải đều Hệ thống']
-  },
-  {
-    id: 'cluster',
-    slug: 'cluster',
-    icon: Boxes,
-    glow: '#f59e0b', // Orange/Amber accent
-    badges_en: ['Heterogeneous Clusters', 'Logistical Efficiency', 'Reduced Cost'],
-    badges_vi: ['Cụm Dị biệt', 'Hiệu quả Vận hành', 'Tiết kiệm Chi phí']
-  },
-  {
-    id: 'descriptive_inferential',
-    slug: 'descriptive_inferential',
-    icon: BarChart3,
-    glow: '#ec4899', // Pink accent
-    badges_en: ['Descriptive Stats', 'Hypothesis Testing', 't-test/ANOVA'],
-    badges_vi: ['Thống kê Mô tả', 'Kiểm định Giả thuyết', 't-test/ANOVA']
-  },
-  {
-    id: 'regression_models',
-    slug: 'regression_models',
-    icon: TrendingUp,
-    glow: '#f43f5e', // Rose accent
-    badges_en: ['Linear Regression', 'Logistic Regression', 'Variable Relations'],
-    badges_vi: ['Hồi quy Tuyến tính', 'Hồi quy Logistic', 'Mối quan hệ Biến']
+    id: 'sql_database',
+    slug: 'sql_database',
+    icon: Database,
+    glow: '#0ea5e9', // Sky
+    badges_en: ['Raw SQL Queries', 'Data Cleaning', 'Filtering & Joins'],
+    badges_vi: ['Truy vấn SQL thô', 'Làm sạch Dữ liệu', 'Lọc & Kết nối']
   }
 ];
 
-function MethodCard({ method, isVi, delay, t }: { method: SamplingMethod; isVi: boolean; delay: number; t: (k: string) => string }) {
+function TopicCard({ topic, isVi, delay, t }: { topic: ToolTopic; isVi: boolean; delay: number; t: (k: string) => string }) {
   const isDark = useIsDark();
-  const Icon = method.icon;
+  const Icon = topic.icon;
 
   const cardStyle: React.CSSProperties = isDark
     ? { background: 'rgba(10,10,10,0.6)', border: '1px solid rgba(255,255,255,0.07)' }
     : { background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(0,0,0,0.06)' };
 
-  const badges = isVi ? method.badges_vi : method.badges_en;
+  const badges = isVi ? topic.badges_vi : topic.badges_en;
 
   return (
     <motion.div
@@ -84,14 +60,14 @@ function MethodCard({ method, isVi, delay, t }: { method: SamplingMethod; isVi: 
       className="h-full"
     >
       <Link
-        to={`/sampling/${method.slug}`}
+        to={`/tools/${topic.slug}`}
         className="block h-full p-8 md:p-10 rounded-[2rem] relative overflow-hidden group"
         style={{ ...cardStyle, backdropFilter: 'blur(20px)', textDecoration: 'none' }}
       >
         {/* Glow orb */}
         <motion.div
           className="absolute -right-16 -top-16 w-56 h-56 rounded-full pointer-events-none"
-          style={{ background: `radial-gradient(circle, ${method.glow}26 0%, transparent 70%)`, filter: 'blur(24px)' }}
+          style={{ background: `radial-gradient(circle, ${topic.glow}26 0%, transparent 70%)`, filter: 'blur(24px)' }}
           initial={{ scale: 1, opacity: 0.6 }}
           whileHover={{ scale: 1.5, opacity: 0.9 }}
           transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
@@ -112,7 +88,7 @@ function MethodCard({ method, isVi, delay, t }: { method: SamplingMethod; isVi: 
                   borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
                 }}
               >
-                <Icon className="w-8 h-8" style={{ color: method.glow }} />
+                <Icon className="w-8 h-8" style={{ color: topic.glow }} />
               </div>
             </motion.div>
 
@@ -134,21 +110,21 @@ function MethodCard({ method, isVi, delay, t }: { method: SamplingMethod; isVi: 
             </div>
 
             <h3 className="text-2xl font-black mb-3 leading-tight tracking-tight" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>
-              {t(`sampling.${method.id}.title`)}
+              {t(`tools.${topic.id}.title`)}
             </h3>
             <p className="text-sm md:text-base leading-relaxed mb-8" style={{ color: isDark ? '#94a3b8' : '#475569' }}>
-              {t(`sampling.${method.id}.desc`)}
+              {t(`tools.${topic.id}.desc`)}
             </p>
           </div>
 
           {/* CTA Arrow */}
           <motion.div
             className="inline-flex items-center gap-2 text-sm font-black tracking-tight"
-            style={{ color: method.glow }}
+            style={{ color: topic.glow }}
             whileHover={{ x: 5 }}
             transition={{ type: 'spring', stiffness: 400 }}
           >
-            {isVi ? 'Khám phá Phương pháp' : 'Explore Method'} <ArrowRight className="w-4 h-4" />
+            {isVi ? 'Khám phá Công cụ' : 'Explore Tool'} <ArrowRight className="w-4 h-4" />
           </motion.div>
         </div>
       </Link>
@@ -167,21 +143,21 @@ function HeroHeader({ t }: { t: (k: string) => string }) {
       <motion.h1
         variants={zoomReveal}
         className="text-5xl md:text-7xl font-black mb-6 bg-clip-text text-transparent"
-        style={{ backgroundImage: 'linear-gradient(135deg, #e2ff3b 0%, #10b981 50%, #3b82f6 100%)' }}
+        style={{ backgroundImage: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #0ea5e9 100%)' }}
       >
-        {t('sampling.title')}
+        {t('tools.title')}
       </motion.h1>
       <motion.p
         variants={fadeUp}
         className="text-lg md:text-xl max-w-3xl leading-relaxed font-semibold text-slate-400"
       >
-        {t('sampling.subtitle')}
+        {t('tools.subtitle')}
       </motion.p>
     </motion.div>
   );
 }
 
-export default function SamplingTechniques() {
+export default function ToolsProgramming() {
   const { t, i18n } = useTranslation();
   const isVi = i18n.language.startsWith('vi');
 
@@ -196,10 +172,10 @@ export default function SamplingTechniques() {
         initial="hidden"
         whileInView="visible"
         viewport={inViewport}
-        className="grid grid-cols-1 md:grid-cols-2 gap-8"
+        className="grid grid-cols-1 md:grid-cols-3 gap-8"
       >
-        {METHODS.map((method, i) => (
-          <MethodCard key={method.id} method={method} isVi={isVi} delay={i * 0.05} t={t} />
+        {TOPICS.map((topic, i) => (
+          <TopicCard key={topic.id} topic={topic} isVi={isVi} delay={i * 0.05} t={t} />
         ))}
       </motion.div>
     </motion.div>

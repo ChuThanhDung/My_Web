@@ -3,33 +3,30 @@ import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import SimpleRandomSamplingContent from '../components/sampling/SimpleRandomSamplingContent';
-import StratifiedSamplingContent from '../components/sampling/StratifiedSamplingContent';
-import SystematicSamplingContent from '../components/sampling/SystematicSamplingContent';
-import ClusterSamplingContent from '../components/sampling/ClusterSamplingContent';
-import DescriptiveInferentialContent from '../components/sampling/DescriptiveInferentialContent';
-import RegressionModelsContent from '../components/sampling/RegressionModelsContent';
+import LanguagesContent from '../components/tools/LanguagesContent';
+import ClassicalSoftwareContent from '../components/tools/ClassicalSoftwareContent';
+import SqlContent from '../components/tools/SqlContent';
 import { pageEnter } from '../lib/motion';
 import { useIsDark } from '../hooks/useIsDark';
 
 const SECTIONS = [
   { id: 'overview', labelEn: '1. Overview & Definition', labelVi: '1. Tổng quan & Định nghĩa' },
-  { id: 'purpose', labelEn: '2. Meaning & Purpose', labelVi: '2. Ý nghĩa & Mục đích' },
-  { id: 'math', labelEn: '3. Math & Formulas', labelVi: '3. Công thức Toán học' },
-  { id: 'simulator', labelEn: '4. Visual Simulator', labelVi: '4. Mô phỏng trực quan' },
-  { id: 'steps', labelEn: '5. Step-by-Step Guide', labelVi: '5. Quy trình thực hiện' },
-  { id: 'comparison', labelEn: '6. Method Comparison', labelVi: '6. So sánh phương pháp' },
-  { id: 'mistakes', labelEn: '7. Pitfalls to Avoid', labelVi: '7. Sai lầm cần tránh' }
+  { id: 'purpose', labelEn: '2. Importance & Use Cases', labelVi: '2. Vai trò & Ứng dụng' },
+  { id: 'math', labelEn: '3. Technical Focus', labelVi: '3. Đặc điểm kỹ thuật' },
+  { id: 'simulator', labelEn: '4. Interactive Simulator', labelVi: '4. Bộ mô phỏng thực hành' },
+  { id: 'steps', labelEn: '5. Workflow Steps', labelVi: '5. Các bước quy trình' },
+  { id: 'comparison', labelEn: '6. Feature Comparison', labelVi: '6. So sánh chi tiết' },
+  { id: 'mistakes', labelEn: '7. Anti-patterns to Avoid', labelVi: '7. Sai lầm cần tránh' }
 ];
 
-export default function SamplingDetails() {
-  const { samplingId } = useParams();
+export default function ToolDetails() {
+  const { toolId } = useParams();
   const { t, i18n } = useTranslation();
   const isVi = i18n.language.startsWith('vi');
   const isDark = useIsDark();
   const [activeSection, setActiveSection] = useState('overview');
 
-  const title = t(`sampling.${samplingId}.title`, { defaultValue: 'Method Not Found' });
+  const title = t(`tools.${toolId}.title`, { defaultValue: 'Tool Not Found' });
 
   // Handle active section highlighting on scroll
   useEffect(() => {
@@ -82,7 +79,7 @@ export default function SamplingDetails() {
         transition={{ type: 'spring', stiffness: 200, damping: 22, delay: 0.1 }}
       >
         <Link
-          to="/sampling"
+          to="/tools"
           className="inline-flex items-center gap-2 mb-8 font-semibold transition-all group"
           style={{ color: isDark ? '#94a3b8' : '#64748b', textDecoration: 'none' }}
         >
@@ -93,7 +90,7 @@ export default function SamplingDetails() {
           >
             <ArrowLeft className="w-4 h-4" />
           </motion.span>
-          {isVi ? 'Quay lại Phương pháp Lấy mẫu' : 'Back to Sampling Techniques'}
+          {isVi ? 'Quay lại Công cụ & Lập trình' : 'Back to Tools & Programming'}
         </Link>
       </motion.div>
 
@@ -107,10 +104,10 @@ export default function SamplingDetails() {
           className="lg:col-span-3 rounded-3xl relative overflow-hidden"
           style={{ ...cardStyle, backdropFilter: 'blur(20px)' }}
         >
-          {/* Lime-to-emerald gradient accent bar */}
+          {/* Violet-to-sky gradient accent bar */}
           <div
             className="w-full h-1"
-            style={{ background: 'linear-gradient(90deg, #e2ff3b, #10b981, #06b6d4)' }}
+            style={{ background: 'linear-gradient(90deg, #8b5cf6, #6366f1, #0ea5e9)' }}
           />
 
           <div className="p-6 md:p-12">
@@ -129,14 +126,11 @@ export default function SamplingDetails() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.35, duration: 0.5 }}
             >
-              {samplingId === 'simple_random' ? <SimpleRandomSamplingContent /> :
-               samplingId === 'stratified'    ? <StratifiedSamplingContent /> :
-               samplingId === 'systematic'    ? <SystematicSamplingContent /> :
-               samplingId === 'cluster'       ? <ClusterSamplingContent /> :
-               samplingId === 'descriptive_inferential' ? <DescriptiveInferentialContent /> :
-               samplingId === 'regression_models' ? <RegressionModelsContent /> : (
+              {toolId === 'analysis_languages' ? <LanguagesContent /> :
+               toolId === 'classical_software' ? <ClassicalSoftwareContent /> :
+               toolId === 'sql_database'       ? <SqlContent /> : (
                 <p className="text-lg" style={{ color: isDark ? '#94a3b8' : '#475569' }}>
-                  {isVi ? 'Không tìm thấy nội dung cho phương pháp này.' : 'Content not found for this method.'}
+                  {isVi ? 'Không tìm thấy nội dung cho phần này.' : 'Content not found for this section.'}
                 </p>
               )}
             </motion.div>
@@ -166,13 +160,13 @@ export default function SamplingDetails() {
                   className="w-full text-left py-2 px-3 rounded-lg text-xs font-semibold tracking-tight transition-all block overflow-hidden text-ellipsis whitespace-nowrap"
                   style={{
                     backgroundColor: isActive 
-                      ? (isDark ? 'rgba(226, 255, 59, 0.08)' : 'rgba(16, 185, 129, 0.08)') 
+                      ? (isDark ? 'rgba(139, 92, 246, 0.08)' : 'rgba(99, 102, 241, 0.08)') 
                       : 'transparent',
                     color: isActive 
-                      ? (isDark ? '#e2ff3b' : '#10b981') 
+                      ? (isDark ? '#a78bfa' : '#6366f1') 
                       : (isDark ? '#a1a1aa' : '#52525b'),
                     borderLeft: isActive 
-                      ? `2px solid ${isDark ? '#e2ff3b' : '#10b981'}` 
+                      ? `2px solid ${isDark ? '#a78bfa' : '#6366f1'}` 
                       : '2px solid transparent'
                   }}
                 >

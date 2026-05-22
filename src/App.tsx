@@ -6,6 +6,8 @@ import MachineLearning from './pages/MachineLearning';
 import TopicDetails from './pages/TopicDetails';
 import SamplingTechniques from './pages/SamplingTechniques';
 import SamplingDetails from './pages/SamplingDetails';
+import ToolsProgramming from './pages/ToolsProgramming';
+import ToolDetails from './pages/ToolDetails';
 import Admin from './pages/Admin';
 import Contact from './pages/Contact';
 import About from './pages/About';
@@ -34,6 +36,8 @@ function AnimatedRoutes() {
           <Route path="ml/:topicId" element={<TopicDetails />} />
           <Route path="sampling" element={<SamplingTechniques />} />
           <Route path="sampling/:samplingId" element={<SamplingDetails />} />
+          <Route path="tools"    element={<ToolsProgramming />} />
+          <Route path="tools/:toolId" element={<ToolDetails />} />
           <Route path="admin"    element={<Admin />} />
           <Route path="projects" element={<Placeholder title="Projects" />} />
           <Route path="about"    element={<About />} />

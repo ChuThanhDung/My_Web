@@ -3,9 +3,12 @@
     "home": "Trang chủ",
     "ml": "Machine Learning",
     "sampling": "Phương pháp Lấy mẫu",
+    "tools": "Công cụ & Lập trình",
     "projects": "Dự án",
     "about": "Giới thiệu",
-    "contact": "Liên hệ"
+    "contact": "Liên hệ",
+    "hide_header": "Ẩn menu",
+    "show_header": "Hiện menu"
   },
   "home": {
     "greeting": "Xin chào, tôi là",
@@ -84,6 +87,14 @@
     "cluster": {
       "title": "Lấy mẫu Cụm",
       "desc": "Chia quần thể thành các cụm tự nhiên, sau đó chọn ngẫu nhiên toàn bộ các cụm để nghiên cứu."
+    },
+    "descriptive_inferential": {
+      "title": "Thống kê Mô tả & Suy luận",
+      "desc": "Tính toán các chỉ số cơ bản (trung bình, phương sai, độ lệch chuẩn) và kiểm định giả thuyết (Hypothesis Testing) như t-test, ANOVA, Chi-square."
+    },
+    "regression_models": {
+      "title": "Mô hình Hồi quy",
+      "desc": "Thành thạo hồi quy tuyến tính (Linear Regression) và hồi quy Logistic để tìm ra mối quan hệ giữa các biến."
     }
   },
   "about": {
@@ -105,5 +116,21 @@
     "tech_frontend_details": "React 19, TypeScript, Vite 8, Tailwind CSS, Framer Motion mang lại giao diện và hiệu ứng chuyển động cao cấp.",
     "tech_backend": "Dịch vụ Backend",
     "tech_backend_details": "FastAPI (Python 3.12+), SQLAlchemy ORM, cơ sở dữ liệu SQLite cung cấp API xử lý hiệu năng vượt trội."
+  },
+  "tools": {
+    "title": "Công cụ & Lập trình",
+    "subtitle": "Thành thạo các ngôn ngữ phần mềm, công cụ thống kê và hệ cơ sở dữ liệu phân tích.",
+    "analysis_languages": {
+      "title": "Ngôn ngữ phân tích chuyên sâu",
+      "desc": "Sử dụng R cho thống kê và biểu đồ học thuật, hoặc Python (Pandas, NumPy, Statsmodels) cho tích hợp Machine Learning."
+    },
+    "classical_software": {
+      "title": "Phần mềm thống kê cổ điển",
+      "desc": "Các công cụ phân tích dữ liệu chuyên nghiệp (SPSS, Stata, EViews) được dùng rộng rãi trong nghiên cứu thị trường và kinh tế."
+    },
+    "sql_database": {
+      "title": "Quản lý & Xử lý dữ liệu thô",
+      "desc": "Viết truy vấn SQL từ cơ bản đến trung cấp để truy vấn, lọc và làm sạch dữ liệu thô trước khi đưa vào phân tích."
+    }
   }
 }

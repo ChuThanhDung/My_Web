@@ -3,9 +3,12 @@
     "home": "Home",
     "ml": "Machine Learning",
     "sampling": "Sampling Techniques",
+    "tools": "Tools & Programming",
     "projects": "Projects",
     "about": "About",
-    "contact": "Contact"
+    "contact": "Contact",
+    "hide_header": "Hide Menu",
+    "show_header": "Show Menu"
   },
   "home": {
     "greeting": "Hello, I'm",
@@ -84,6 +87,14 @@
     "cluster": {
       "title": "Cluster Sampling",
       "desc": "Divides population into natural clusters, then randomly chooses entire clusters to study."
+    },
+    "descriptive_inferential": {
+      "title": "Descriptive & Inferential Statistics",
+      "desc": "Calculate basic statistics (mean, variance, standard deviation) and perform hypothesis testing like t-test, ANOVA, and Chi-square."
+    },
+    "regression_models": {
+      "title": "Regression Models",
+      "desc": "Master Linear Regression and Logistic Regression to uncover relationships between variables."
     }
   },
   "about": {
@@ -105,5 +116,21 @@
     "tech_frontend_details": "React 19, TypeScript, Vite 8, Tailwind CSS, Framer Motion for premium web layout and animations.",
     "tech_backend": "Backend Services",
     "tech_backend_details": "FastAPI (Python 3.12+), SQLAlchemy ORM, SQLite database for high-performance API endpoint services."
+  },
+  "tools": {
+    "title": "Tools & Programming",
+    "subtitle": "Master the primary software languages, tools, and databases used for data analysis.",
+    "analysis_languages": {
+      "title": "Deep Analysis Languages",
+      "desc": "Leverage R for stats and data viz, or Python (Pandas, NumPy, Statsmodels) for machine learning integrations."
+    },
+    "classical_software": {
+      "title": "Classical Statistical Software",
+      "desc": "Professional software (SPSS, Stata, EViews) used in traditional market research and economics."
+    },
+    "sql_database": {
+      "title": "Raw Data Management & Cleaning",
+      "desc": "Write queries to filter, clean, and prepare data from databases for analysis."
+    }
   }
 }

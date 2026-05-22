@@ -194,7 +194,7 @@ export default function Layout() {
 
   return (
     <div
-      className="flex flex-col min-h-screen relative overflow-hidden"
+      className="flex flex-col min-h-screen relative overflow-x-clip"
       style={{ background: bg, transition: 'background 0.5s ease' }}
     >
       <ParticleCanvas isDark={isDark} />

@@ -1,6 +1,6 @@
 import { motion, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, BrainCircuit, FolderOpen, User, Mail, Sparkles, Play, Pause } from 'lucide-react';
+import { ArrowRight, BrainCircuit, FolderOpen, User, Mail, Sparkles, Play, Pause, Shuffle, Terminal } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useRef, useState } from 'react';
 import { pageEnter, stagger, fadeUp, zoomReveal, cardHover, floatAnimation, inViewport } from '../lib/motion';
@@ -57,6 +57,8 @@ function ParallaxLayer({ children, speed = 0.15 }: { children: React.ReactNode; 
 const cardColors: Record<string, { icon: string }> = {
   projects: { icon: 'text-blue-500' },
   ml:       { icon: 'text-purple-500' },
+  sampling: { icon: 'text-lime-500' },
+  tools:    { icon: 'text-violet-500' },
   about:    { icon: 'text-emerald-500' },
   contact:  { icon: 'text-rose-500' },
 };
@@ -92,6 +94,8 @@ export default function Home() {
   const cards = [
     { to: '/projects', icon: FolderOpen, key: 'projects', title: t('nav.projects') },
     { to: '/ml',       icon: BrainCircuit, key: 'ml',     title: t('nav.ml') },
+    { to: '/sampling', icon: Shuffle,     key: 'sampling', title: t('nav.sampling') },
+    { to: '/tools',    icon: Terminal,    key: 'tools',    title: t('nav.tools') },
     { to: '/about',    icon: User,        key: 'about',   title: t('nav.about') },
     { to: '/contact',  icon: Mail,        key: 'contact', title: t('nav.contact') },
   ];
@@ -642,7 +646,7 @@ export default function Home() {
         initial="hidden"
         whileInView="visible"
         viewport={inViewport}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10"
       >
         {cards.map((card) => {
           const c = cardColors[card.key];
