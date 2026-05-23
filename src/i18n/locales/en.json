@@ -3,6 +3,7 @@
     "home": "Home",
     "ml": "Machine Learning",
     "sampling": "Sampling Techniques",
+    "pro_tools": "Interactive Tools",
     "tools": "Tools & Programming",
     "projects": "Projects",
     "about": "About",
@@ -41,7 +42,12 @@
       "tool_4_bass": "Bass",
       "tool_4_mid": "Mid",
       "tool_4_treble": "Treble",
-      "tool_4_boost": "Boost"
+      "tool_4_boost": "Boost",
+      "usage_guide_title": "Usage Guide",
+      "tool_1_usage": "Click the 'SHUFFLE COORDINATES' button or click directly on the simulation box to reallocate data points. You will see lines connecting each point to its nearest cluster centroid, demonstrating the K-Means algorithm clustering via Euclidean distance.",
+      "tool_2_usage": "Click the pipeline state buttons: 'IN' (Data Ingestion), 'PROC' (Processing), or 'OUT' (Data Inference) to execute each step and view real-time performance logs below.",
+      "tool_3_usage": "Select a UI theme: 'Dark' (developer mode), 'Light' (high contrast), or 'Kino' (cinematic style). The page colors and background particle generator will adapt immediately.",
+      "tool_4_usage": "Adjust frequency filters by clicking 'Bass', 'Mid', 'Treble', or 'Boost' to adjust spectral density. Click directly on the meter bars to Play or Pause the real-time audio wave visualization."
     }
   },
   "ml": {
@@ -132,5 +138,24 @@
       "title": "Raw Data Management & Cleaning",
       "desc": "Write queries to filter, clean, and prepare data from databases for analysis."
     }
+  },
+  "pro_tools_page": {
+    "title": "Interactive Control Panel",
+    "subtitle": "Visualize and interact with machine learning clustering algorithms, data pipelines, theme customizers, and spectrum meters."
+  },
+  "settings": {
+    "title": "System Settings",
+    "pin_menu": "Pin Navigation Bar",
+    "pin_menu_desc": "Always show menu, hiding collapse button",
+    "particle_density": "Particle Density",
+    "particle_density_desc": "Adjust number of background particles",
+    "mouse_interaction": "Mouse Interaction",
+    "mouse_interaction_desc": "Particles repel from mouse pointer movement",
+    "accent_color": "Accent Color",
+    "accent_color_desc": "Choose primary color for buttons and highlights",
+    "reduce_motion": "Reduce Motion",
+    "reduce_motion_desc": "Disable background particles and speed up transitions",
+    "sound_effects": "Sound Effects",
+    "sound_effects_desc": "Enable subtle audio feedback during interactions"
   }
 }

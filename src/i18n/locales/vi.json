@@ -3,6 +3,7 @@
     "home": "Trang chủ",
     "ml": "Machine Learning",
     "sampling": "Phương pháp Lấy mẫu",
+    "pro_tools": "Công cụ Tương tác",
     "tools": "Công cụ & Lập trình",
     "projects": "Dự án",
     "about": "Giới thiệu",
@@ -41,7 +42,12 @@
       "tool_4_bass": "Bass",
       "tool_4_mid": "Mid",
       "tool_4_treble": "Treble",
-      "tool_4_boost": "Boost"
+      "tool_4_boost": "Boost",
+      "usage_guide_title": "Hướng dẫn sử dụng",
+      "tool_1_usage": "Click vào nút 'XÁO TRỘN TỌA ĐỘ' hoặc nhấn trực tiếp vào khung mô phỏng để phân bổ lại ngẫu nhiên các điểm dữ liệu. Bạn sẽ thấy các đường nối kết nối từng điểm đến tâm cụm gần nhất, mô tả trực quan thuật toán K-Means phân cụm bằng khoảng cách Euclide.",
+      "tool_2_usage": "Nhấp vào các nút trạng thái của quy trình: 'IN' (Đầu vào), 'PROC' (Xử lý) hoặc 'OUT' (Đầu ra) để thực thi từng bước và xem log hiệu năng thời gian thực được cập nhật ở bảng điều khiển bên dưới.",
+      "tool_3_usage": "Chọn các giao diện tùy chỉnh: 'Tối' (mặc định), 'Sáng' (độ tương phản cao) hoặc 'Kino' (chế độ điện ảnh đặc trưng). Màu sắc giao diện và hạt Canvas nền sẽ phản hồi ngay lập tức theo lựa chọn của bạn.",
+      "tool_4_usage": "Điều chỉnh bộ lọc tần số bằng cách nhấn vào 'Bass', 'Mid', 'Treble' hoặc 'Boost' để thay đổi biên độ dao động của các cột đo. Nhấp trực tiếp vào cột đo để Tạm dừng/Chạy tiếp hoạt ảnh sóng âm."
     }
   },
   "ml": {
@@ -132,5 +138,24 @@
       "title": "Quản lý & Xử lý dữ liệu thô",
       "desc": "Viết truy vấn SQL từ cơ bản đến trung cấp để truy vấn, lọc và làm sạch dữ liệu thô trước khi đưa vào phân tích."
     }
+  },
+  "pro_tools_page": {
+    "title": "Bảng điều khiển Tương tác",
+    "subtitle": "Trực quan hóa và trải nghiệm thực tế các thuật toán phân cụm, quy trình dữ liệu và các cấu hình hiển thị."
+  },
+  "settings": {
+    "title": "Cấu hình hệ thống",
+    "pin_menu": "Cố định thanh Menu",
+    "pin_menu_desc": "Luôn hiển thị menu và ẩn nút thu nhỏ",
+    "particle_density": "Mật độ hạt chuyển động",
+    "particle_density_desc": "Điều chỉnh số lượng hạt bay ở nền ứng dụng",
+    "mouse_interaction": "Tương tác với chuột",
+    "mouse_interaction_desc": "Hạt tự động tránh xa khi chuột di chuyển qua",
+    "accent_color": "Màu điểm nhấn",
+    "accent_color_desc": "Chọn tông màu chủ đạo cho các nút và biểu tượng",
+    "reduce_motion": "Giảm chuyển động",
+    "reduce_motion_desc": "Tắt chuyển động hạt nền và giảm hoạt ảnh chuyển cảnh",
+    "sound_effects": "Hiệu ứng âm thanh",
+    "sound_effects_desc": "Bật âm thanh phản hồi nhẹ khi nhấp chọn giao diện"
   }
 }

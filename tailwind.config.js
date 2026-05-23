@@ -8,6 +8,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        accent: 'rgb(var(--color-accent) / <alpha-value>)',
         primary: {
           50: '#fdf4ff',
           100: '#fae8ff',

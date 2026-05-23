@@ -4,8 +4,9 @@ import ThemeToggle from './ThemeToggle';
 import LanguageToggle from './LanguageToggle';
 import { useEffect, useRef } from 'react';
 import { useIsDark } from '../hooks/useIsDark';
+import { Settings } from 'lucide-react';
 
-// ─── Theme token maps ────────────────────────────────────────────────────────
+// ── Theme token maps ────────────────────────────────────────────────────────
 const DARK_BG   = '#000000';            // pitch black
 const LIGHT_BG  = '#f1f5f9';            // slate-100
 
@@ -69,7 +70,9 @@ function ParticleCanvas({ isDark }: ParticleCanvasProps) {
         const w = canvas!.width / dpr, h = canvas!.height / dpr;
         if (this.x < this.size || this.x > w - this.size) { this.vx = -this.vx; this.bvx = -this.bvx; }
         if (this.y < this.size || this.y > h - this.size) { this.vy = -this.vy; this.bvy = -this.bvy; }
-        if (mouse.x !== null && mouse.y !== null) {
+        
+        const interactive = localStorage.getItem('particles_interactive') !== 'false';
+        if (interactive && mouse.x !== null && mouse.y !== null) {
           const dx = mouse.x - this.x, dy = mouse.y - this.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < 150 && dist > 0) {
@@ -92,18 +95,28 @@ function ParticleCanvas({ isDark }: ParticleCanvasProps) {
     let particles: Particle[] = [];
 
     function spawnParticles() {
-      particles = Array.from({ length: 90 }, () => new Particle().init());
+      const density = localStorage.getItem('particles_density') || 'medium';
+      const reduceMotion = localStorage.getItem('reduce_motion') === 'true';
+      let count = 90;
+      if (reduceMotion || density === 'none') count = 0;
+      else if (density === 'low') count = 30;
+      else if (density === 'high') count = 180;
+      particles = Array.from({ length: count }, () => new Particle().init());
     }
 
-    function resize() {
+    const resize = () => {
       dpr = window.devicePixelRatio || 1;
-      canvas!.width  = window.innerWidth  * dpr;
-      canvas!.height = window.innerHeight * dpr;
-      ctx.scale(dpr, dpr);
+      if (canvas) {
+        canvas.width  = window.innerWidth  * dpr;
+        canvas.height = window.innerHeight * dpr;
+        ctx.scale(dpr, dpr);
+      }
       spawnParticles();
-    }
+    };
 
     function connect() {
+      const density = localStorage.getItem('particles_density') || 'medium';
+      if (density === 'none') return;
       const linkColor = isDarkRef.current ? DARK_LINK_COLOR : LIGHT_LINK_COLOR;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
@@ -125,8 +138,11 @@ function ParticleCanvas({ isDark }: ParticleCanvasProps) {
 
     function loop() {
       ctx.clearRect(0, 0, canvas!.width / dpr, canvas!.height / dpr);
-      for (const p of particles) p.update();
-      connect();
+      const density = localStorage.getItem('particles_density') || 'medium';
+      if (density !== 'none') {
+        for (const p of particles) p.update();
+        connect();
+      }
       animId = requestAnimationFrame(loop);
     }
 
@@ -135,11 +151,16 @@ function ParticleCanvas({ isDark }: ParticleCanvasProps) {
     const onTouch   = (e: TouchEvent) => { if (e.touches[0]) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; } };
     const onTouchEnd = () => { mouse.x = null; mouse.y = null; };
 
+    const handleSettings = () => {
+      spawnParticles();
+    };
+
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseleave', onLeave);
     window.addEventListener('touchmove', onTouch, { passive: true });
     window.addEventListener('touchend', onTouchEnd);
     window.addEventListener('resize', resize);
+    window.addEventListener('settings-changed', handleSettings);
 
     resize();
     loop();
@@ -151,6 +172,7 @@ function ParticleCanvas({ isDark }: ParticleCanvasProps) {
       window.removeEventListener('touchmove', onTouch);
       window.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('resize', resize);
+      window.removeEventListener('settings-changed', handleSettings);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // mount once — isDark changes are handled via ref
@@ -176,6 +198,23 @@ function ParticleCanvas({ isDark }: ParticleCanvasProps) {
 // ─── Layout ──────────────────────────────────────────────────────────────────
 export default function Layout() {
   const isDark = useIsDark();
+
+  useEffect(() => {
+    const applyAccent = () => {
+      const accentRgb = localStorage.getItem('accent_color_rgb') || '99 102 241';
+      document.documentElement.style.setProperty('--color-accent', accentRgb);
+      
+      const reduceMotion = localStorage.getItem('reduce_motion') === 'true';
+      if (reduceMotion) {
+        document.documentElement.classList.add('reduce-motion');
+      } else {
+        document.documentElement.classList.remove('reduce-motion');
+      }
+    };
+    applyAccent();
+    window.addEventListener('settings-changed', applyAccent);
+    return () => window.removeEventListener('settings-changed', applyAccent);
+  }, []);
 
   const bg          = isDark ? DARK_BG  : LIGHT_BG;
   const gradientA   = isDark
@@ -227,6 +266,17 @@ export default function Layout() {
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />
+            <button
+              onClick={() => {
+                window.dispatchEvent(new Event('toggle-settings'));
+              }}
+              className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center justify-center animate-pulse-slow"
+              style={{ color: textColor }}
+              title="Settings"
+              aria-label="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
           </div>
         </div>
 

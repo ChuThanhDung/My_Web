@@ -11,6 +11,7 @@ import ToolDetails from './pages/ToolDetails';
 import Admin from './pages/Admin';
 import Contact from './pages/Contact';
 import About from './pages/About';
+import ProTools from './pages/ProTools';
 import { motion } from 'framer-motion';
 
 const Placeholder = ({ title }: { title: string }) => (
@@ -36,6 +37,7 @@ function AnimatedRoutes() {
           <Route path="ml/:topicId" element={<TopicDetails />} />
           <Route path="sampling" element={<SamplingTechniques />} />
           <Route path="sampling/:samplingId" element={<SamplingDetails />} />
+          <Route path="pro-tools" element={<ProTools />} />
           <Route path="tools"    element={<ToolsProgramming />} />
           <Route path="tools/:toolId" element={<ToolDetails />} />
           <Route path="admin"    element={<Admin />} />
