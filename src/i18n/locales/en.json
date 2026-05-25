@@ -54,8 +54,8 @@
     "title": "Machine Learning Topics",
     "subtitle": "Explore various algorithms and concepts in Machine Learning.",
     "pca": {
-      "title": "PCA",
-      "desc": "Principal Component Analysis for dimensionality reduction."
+      "title": "Dimensionality Reduction",
+      "desc": "Reduce features using PCA, SVD, and LDA methods."
     },
     "kmeans": {
       "title": "K-Means",

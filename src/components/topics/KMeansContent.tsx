@@ -834,8 +834,190 @@ plt.show()`;
           </div>
         </Section>
 
-        {/* 10. Summary */}
-        <Section id="summary" title={isVi ? '10. Tổng kết' : '10. Summary'} icon="🏁">
+        {/* 10. GMM & EM Algorithm */}
+        <Section id="gmm-em" title={isVi ? '10. GMM & Thuật toán EM' : '10. Gaussian Mixture Models & EM'} icon="🧠">
+          <p>
+            {isVi
+              ? 'Trong khi K-Means thực hiện gán cứng (hard assignment) mỗi điểm vào duy nhất một cụm, Mô hình Trộn Gaussian (Gaussian Mixture Models - GMM) tiếp cận bằng gán mềm (soft assignment) dựa trên lý thuyết xác suất.'
+              : 'While K-Means performs hard assignment of each point to a single cluster, Gaussian Mixture Models (GMM) use soft assignment based on probability theory.'}
+          </p>
+
+          <div className="bg-slate-900 rounded-2xl p-6 text-white space-y-4 my-6 shadow-inner">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              {isVi ? 'Mô hình hỗn hợp Gaussian (GMM Formula)' : 'Gaussian Mixture Model (GMM Formula)'}
+            </div>
+            <BlockMath math="p(x) = \sum_{c=1}^{C} \pi_c \mathcal{N}(x | \mu_c, \Sigma_c)" />
+            <ul className="list-disc list-inside text-xs text-slate-400 space-y-1">
+              <li><InlineMath math="\pi_c" />: {isVi ? 'Trọng số/tỷ lệ của cụm c (tổng bằng 1).' : 'Mixture weight of cluster c (sums to 1).'}</li>
+              <li><InlineMath math="\mu_c" />: {isVi ? 'Tâm kỳ vọng của phân phối Gaussian c.' : 'Mean vector of Gaussian distribution c.'}</li>
+              <li><InlineMath math="\Sigma_c" />: {isVi ? 'Ma trận hiệp phương sai (độ rộng và hướng trải).' : 'Covariance matrix (shape and orientation).'}</li>
+            </ul>
+          </div>
+
+          <p className="text-sm">
+            {isVi
+              ? 'Để học các tham số của GMM khi nhãn cụm (biến ẩn - latent variables) không được quan sát, ta sử dụng thuật toán EM (Expectation-Maximization) gồm hai bước lặp:'
+              : 'To train GMM parameters when cluster labels (latent variables) are unobserved, we use the EM (Expectation-Maximization) algorithm:'}
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-4 mt-2">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-5 rounded-2xl shadow-sm">
+              <h4 className="font-bold text-indigo-600 dark:text-indigo-400 mb-2 text-sm">E-step (Expectation)</h4>
+              <p className="text-xs leading-relaxed text-slate-650 dark:text-slate-405">
+                {isVi
+                  ? 'Ước lượng xác suất mỗi điểm dữ liệu thuộc về từng cụm dựa trên các tham số hiện tại (Dự đoán nhãn mềm).'
+                  : 'Estimate the posterior probability that each data point belongs to each cluster using current parameters (Soft label prediction).'}
+              </p>
+            </div>
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-5 rounded-2xl shadow-sm">
+              <h4 className="font-bold text-violet-600 dark:text-violet-400 mb-2 text-sm">M-step (Maximization)</h4>
+              <p className="text-xs leading-relaxed text-slate-650 dark:text-slate-405">
+                {isVi
+                  ? 'Cập nhật các tham số (trung bình, hiệp phương sai, trọng số cụm) để tối đa hóa hàm Likelihood thu được từ E-step.'
+                  : 'Update cluster parameters (mean, covariance, weight) to maximize the likelihood function derived in the E-step.'}
+              </p>
+            </div>
+          </div>
+        </Section>
+
+        {/* 11. DBSCAN */}
+        <Section id="dbscan" title={isVi ? '11. Thuật toán DBSCAN' : '11. DBSCAN Clustering'} icon="🌐">
+          <p>
+            {isVi
+              ? 'DBSCAN (Density-Based Spatial Clustering of Applications with Noise) là thuật toán phân cụm dựa trên mật độ. Khác với K-Means, DBSCAN không yêu cầu khai báo số cụm K trước và tự động phát hiện nhiễu (outliers).'
+              : 'DBSCAN is a density-based clustering algorithm. Unlike K-Means, it does not require specifying K beforehand and automatically detects noise and outliers.'}
+          </p>
+
+          <div className="p-5 my-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+            <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{isVi ? 'Hai tham số cốt lõi:' : 'Two Core Parameters:'}</h4>
+            <ul className="list-disc list-inside text-xs text-slate-600 dark:text-slate-400 space-y-1 ml-2">
+              <li><strong>Epsilon (eps)</strong>: {isVi ? 'Bán kính tìm kiếm lân cận quanh một điểm.' : 'Search radius around a point.'}</li>
+              <li><strong>MinPts</strong>: {isVi ? 'Số điểm tối thiểu trong bán kính eps để cấu thành một vùng mật độ dày.' : 'Minimum points required within eps to form a dense region.'}</li>
+            </ul>
+          </div>
+
+          <p className="text-sm">
+            {isVi ? 'Thuật toán chia các điểm dữ liệu thành 3 loại:' : 'The algorithm classifies data points into 3 categories:'}
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-4 mt-2">
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 rounded-xl text-center">
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase block mb-1">Core Point</span>
+              <span className="text-xs text-slate-650 dark:text-slate-405 leading-relaxed">
+                {isVi ? 'Có ≥ MinPts điểm trong bán kính eps.' : 'Contains ≥ MinPts points within eps.'}
+              </span>
+            </div>
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl text-center">
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase block mb-1">Border Point</span>
+              <span className="text-xs text-slate-650 dark:text-slate-405 leading-relaxed">
+                {isVi ? 'Có < MinPts điểm trong eps nhưng nằm gần điểm lõi.' : 'Has < MinPts within eps but lies close to a Core point.'}
+              </span>
+            </div>
+            <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded-xl text-center">
+              <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase block mb-1">Noise Point</span>
+              <span className="text-xs text-slate-650 dark:text-slate-405 leading-relaxed">
+                {isVi ? 'Điểm nhiễu, không thỏa mãn hai điều kiện trên.' : 'Outliers that do not satisfy core or border criteria.'}
+              </span>
+            </div>
+          </div>
+        </Section>
+
+        {/* 12. Evaluation Metrics */}
+        <Section id="metrics" title={isVi ? '12. Đánh giá Phân cụm' : '12. Clustering Evaluation Metrics'} icon="📊">
+          <p>
+            {isVi
+              ? 'Phân cụm là học không giám sát, nên việc đánh giá khó khăn hơn phân loại. Ta chia các độ đo (metrics) làm 2 nhóm:'
+              : 'Evaluating clustering is challenging since there are no true labels. We divide metrics into two groups:'}
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-6 mt-4">
+            {/* Without Label */}
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
+              <h4 className="font-extrabold text-indigo-650 dark:text-indigo-400 text-base mb-4">
+                {isVi ? 'Không có nhãn thực tế' : 'Internal Metrics (No Ground Truth)'}
+              </h4>
+              <div className="space-y-4 text-xs">
+                <div>
+                  <strong className="text-slate-900 dark:text-slate-200">Silhouette Score:</strong>
+                  <p className="text-slate-500 mt-1">
+                    {isVi ? 'Đo mức độ gần gũi nội cụm và tách biệt ngoại cụm. Khoảng [-1, 1], càng gần 1 càng tốt.' : 'Measures cohesion and separation. Range [-1, 1], closer to 1 is better.'}
+                  </p>
+                </div>
+                <div className="border-t border-slate-100 dark:border-slate-700/50 pt-3">
+                  <strong className="text-slate-900 dark:text-slate-200">Davies-Bouldin Index:</strong>
+                  <p className="text-slate-500 mt-1">
+                    {isVi ? 'Đo lường sai số trung bình giữa các cụm. Càng nhỏ cụm càng tách biệt và gọn.' : 'Measures average similarity between clusters. Smaller index is better.'}
+                  </p>
+                </div>
+                <div className="border-t border-slate-100 dark:border-slate-700/50 pt-3">
+                  <strong className="text-slate-900 dark:text-slate-200">Calinski-Harabasz Index:</strong>
+                  <p className="text-slate-500 mt-1">
+                    {isVi ? 'Tỷ số giữa độ phân tán giữa các cụm và nội cụm. Giá trị càng lớn càng tốt.' : 'Ratio of between-cluster to within-cluster dispersion. Higher values are better.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* With Label */}
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
+              <h4 className="font-extrabold text-violet-650 dark:text-violet-400 text-base mb-4">
+                {isVi ? 'Có nhãn thực tế (Ground Truth)' : 'External Metrics (With Ground Truth)'}
+              </h4>
+              <div className="space-y-4 text-xs">
+                <div>
+                  <strong className="text-slate-900 dark:text-slate-200">Adjusted Rand Index (ARI):</strong>
+                  <p className="text-slate-500 mt-1">
+                    {isVi ? 'Đo lường sự tương tự giữa hai cách gán nhãn, điều chỉnh theo yếu tố ngẫu nhiên. Cực đại là 1.0.' : 'Calculates similarity between predicted and true labels, adjusted for chance. Max is 1.0.'}
+                  </p>
+                </div>
+                <div className="border-t border-slate-100 dark:border-slate-700/50 pt-3">
+                  <strong className="text-slate-900 dark:text-slate-200">Fowlkes-Mallows Index (FMI):</strong>
+                  <p className="text-slate-500 mt-1">
+                    {isVi ? 'Trung bình nhân của Precision và Recall. Giá trị từ 0 đến 1, càng gần 1 càng giống nhãn thật.' : 'Geometric mean of precision and recall. Range [0, 1], closer to 1 is better.'}
+                  </p>
+                </div>
+                <div className="border-t border-slate-100 dark:border-slate-700/50 pt-3">
+                  <strong className="text-slate-900 dark:text-slate-200">Normalized Mutual Information (NMI):</strong>
+                  <p className="text-slate-500 mt-1">
+                    {isVi ? 'Sử dụng lý thuyết thông tin để so sánh các phân bố nhãn. Giá trị [0, 1], càng cao càng tốt.' : 'Information theoretic measure. Range [0, 1], higher is better.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        {/* 13. Pitfalls & Checklist */}
+        <Section id="checklist" title={isVi ? '13. Lỗi thường gặp & Checklist' : '13. Pitfalls & Best Practices'} icon="🛡️">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-2xl">
+              <h4 className="font-bold text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-2 text-sm">
+                <span>⚠️</span> {isVi ? 'Những sai lầm thường gặp' : 'Common Pitfalls'}
+              </h4>
+              <ul className="space-y-2 text-xs text-amber-800 dark:text-amber-300 list-disc list-inside">
+                <li>{isVi ? 'Không chuẩn hóa dữ liệu khiến các đặc trưng có thang đo lớn áp đảo khoảng cách.' : 'Not standardizing data, allowing features with large scale to dominate distance calculations.'}</li>
+                <li>{isVi ? 'Chọn K một cách cảm tính mà không chạy thử Elbow hoặc Silhouette.' : 'Choosing K arbitrarily without checking Elbow or Silhouette curves.'}</li>
+                <li>{isVi ? 'Bỏ qua Outliers: Các điểm nhiễu kéo lệch vị trí tâm cụm rất mạnh.' : 'Ignoring outliers: Extreme values drag centroids far from the dense core.'}</li>
+                <li>{isVi ? 'Nhầm lẫn Centroid là điểm dữ liệu thực tế. Nó chỉ là trung bình cộng.' : 'Confusing centroids with actual data points. They are coordinate means.'}</li>
+              </ul>
+            </div>
+
+            <div className="p-5 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/40 rounded-2xl">
+              <h4 className="font-bold text-indigo-700 dark:text-indigo-400 mb-3 flex items-center gap-2 text-sm">
+                <span>✓</span> {isVi ? 'Checklist thực hành phân cụm' : 'Practical Checklist'}
+              </h4>
+              <ul className="space-y-2 text-xs text-indigo-800 dark:text-indigo-300 list-decimal list-inside">
+                <li>{isVi ? 'Làm sạch dữ liệu và xử lý khuyết thiếu, nhiễu.' : 'Clean data and handle missing/noisy values.'}</li>
+                <li>{isVi ? 'Scale dữ liệu bằng StandardScaler hoặc MinMaxScaler.' : 'Standardize with StandardScaler or MinMaxScaler.'}</li>
+                <li>{isVi ? 'Chạy thử K-Means với n_init nhiều lần để tránh khởi tạo xấu.' : 'Run K-Means with multiple n_init trials to avoid local minima.'}</li>
+                <li>{isVi ? 'Đánh giá bằng cả công thức định lượng (Silhouette) và hiểu biết nghiệp vụ.' : 'Evaluate using metrics (Silhouette) combined with domain knowledge.'}</li>
+              </ul>
+            </div>
+          </div>
+        </Section>
+
+        {/* 14. Summary */}
+        <Section id="summary" title={isVi ? '14. Tổng kết' : '14. Summary'} icon="🏁">
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 p-6 shadow-lg shadow-indigo-900/30">
             <div className="absolute -right-4 -bottom-4 text-white/10 text-8xl font-black pointer-events-none select-none">✓</div>
             <p className="relative text-white text-sm leading-relaxed font-medium">
@@ -864,7 +1046,11 @@ plt.show()`;
               { id: 'applications', text: isVi ? '7. Ứng dụng'          : '7. Applications' },
               { id: 'python',       text: isVi ? '8. Code Python'       : '8. Python Code' },
               { id: 'complexity',   text: isVi ? '9. Độ phức tạp'       : '9. Complexity' },
-              { id: 'summary',      text: isVi ? '10. Tổng kết'         : '10. Summary' },
+              { id: 'gmm-em',       text: isVi ? '10. GMM & Thuật toán EM' : '10. GMM & EM Algorithm' },
+              { id: 'dbscan',       text: isVi ? '11. Thuật toán DBSCAN' : '11. DBSCAN Algorithm' },
+              { id: 'metrics',      text: isVi ? '12. Đánh giá Phân cụm' : '12. Evaluation Metrics' },
+              { id: 'checklist',    text: isVi ? '13. Lỗi thường gặp & Checklist' : '13. Pitfalls & Checklist' },
+              { id: 'summary',      text: isVi ? '14. Tổng kết'         : '14. Summary' },
             ].map(item => (
               <a
                 key={item.id}

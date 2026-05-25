@@ -20,10 +20,10 @@ def seed():
     articles = [
         {
             "slug": "pca",
-            "title_en": "Principal Component Analysis",
-            "title_vi": "Phân tích Thành phần Chính",
-            "description_en": "Dimensionality reduction technique that preserves variance.",
-            "description_vi": "Kỹ thuật giảm chiều dữ liệu giữ lại phương sai.",
+            "title_en": "Dimensionality Reduction",
+            "title_vi": "Giảm chiều Dữ liệu",
+            "description_en": "Reduce features using PCA, SVD, and LDA methods.",
+            "description_vi": "Giảm số lượng đặc trưng bằng các phương pháp PCA, SVD và LDA.",
             "category": "Dimensionality Reduction"
         },
         {

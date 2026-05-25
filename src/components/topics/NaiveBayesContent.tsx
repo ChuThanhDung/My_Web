@@ -414,26 +414,147 @@ print("Prediction for new email:", "Spam" if model.predict(X_new)[0] == 1 else "
 
         {/* 6. Variants */}
         <Section id="variants" title={isVi ? "Các biến thể của Naive Bayes" : "Variants of Naive Bayes"} icon="🧬">
-           <div className="grid md:grid-cols-3 gap-4">
-             <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-               <h4 className="font-bold text-blue-600 dark:text-blue-400 mb-2">Multinomial</h4>
-               <p className="text-sm">
-                 {isVi ? "Dùng cho dữ liệu biểu diễn dưới dạng đếm (VD: số lần xuất hiện của từ trong văn bản). Phổ biến nhất cho Text Classification." : "Used for discrete counts (e.g., word counts in text). Most popular for Text Classification."}
-               </p>
+           <p className="mb-4">
+             {isVi
+               ? "Tùy thuộc vào kiểu dữ liệu của các đặc trưng, ta sử dụng công thức tính xác suất hợp lý P(x_i | c) phù hợp:"
+               : "Depending on the feature data types, we choose the appropriate probability estimation method for P(x_i | c):"}
+           </p>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+             <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+               <div>
+                 <h4 className="font-extrabold text-blue-600 dark:text-blue-400 mb-3 text-lg">Multinomial NB</h4>
+                 <p className="text-sm mb-4 leading-relaxed">
+                   {isVi 
+                     ? "Áp dụng cho dữ liệu đếm tần suất (VD: số lần từ xuất hiện trong văn bản). Phổ biến nhất cho Phân loại văn bản." 
+                     : "Applied to frequency counts (e.g. word frequency in text). Most popular variant for Text Classification."}
+                 </p>
+               </div>
+               <div className="bg-slate-950 p-3 rounded-xl text-xs overflow-x-auto border border-slate-800">
+                 <BlockMath math="P(x_i|c) = \frac{N_{ci} + \alpha}{N_c + d\alpha}" />
+                 <p className="text-[10px] text-slate-500 mt-2 text-center">
+                   {isVi ? "Kỹ thuật Laplace Smoothing tránh xác suất bằng 0." : "Laplace Smoothing prevents zero probability."}
+                 </p>
+               </div>
              </div>
-             <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-               <h4 className="font-bold text-sky-600 dark:text-sky-400 mb-2">Gaussian</h4>
-               <p className="text-sm">
-                 {isVi ? "Giả định các đặc trưng liên tục tuân theo phân phối chuẩn (Gaussian/Normal distribution)." : "Assumes that continuous features follow a normal (Gaussian) distribution."}
-               </p>
+
+             <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+               <div>
+                 <h4 className="font-extrabold text-sky-600 dark:text-sky-400 mb-3 text-lg">Bernoulli NB</h4>
+                 <p className="text-sm mb-4 leading-relaxed">
+                   {isVi 
+                     ? "Áp dụng khi đặc trưng chỉ ở dạng Nhị phân (0 hoặc 1), ví dụ: một từ có xuất hiện hay không xuất hiện trong văn bản." 
+                     : "Applied when features are Binary (0 or 1), indicating presence or absence of a word in a document."}
+                 </p>
+               </div>
+               <div className="bg-slate-950 p-3 rounded-xl text-xs overflow-x-auto border border-slate-800">
+                 <BlockMath math="P(x_i|c) = (P_{i,c})^{x_i}(1 - P_{i,c})^{1 - x_i}" />
+                 <p className="text-[10px] text-slate-500 mt-2 text-center">
+                   {isVi ? "Với x_i là 0 hoặc 1." : "Where x_i is either 0 or 1."}
+                 </p>
+               </div>
              </div>
-             <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-               <h4 className="font-bold text-cyan-600 dark:text-cyan-400 mb-2">Bernoulli</h4>
-               <p className="text-sm">
-                 {isVi ? "Giống Multinomial nhưng dữ liệu đầu vào là nhị phân boolean (VD: từ có xuất hiện hay không, thay vì đếm số lần)." : "Similar to Multinomial but inputs are boolean variables (e.g., word present or not, instead of counts)."}
-               </p>
+
+             <div className="p-5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+               <div>
+                 <h4 className="font-extrabold text-cyan-600 dark:text-cyan-400 mb-3 text-lg">Gaussian NB</h4>
+                 <p className="text-sm mb-4 leading-relaxed">
+                   {isVi 
+                     ? "Áp dụng cho đặc trưng là số thực liên tục (VD: chiều cao, cân nặng). Giả định dữ liệu tuân theo Phân phối chuẩn." 
+                     : "Applied to continuous real-valued features (e.g. height, weight). Assumes features follow a normal distribution."}
+                 </p>
+               </div>
+               <div className="bg-slate-950 p-3 rounded-xl text-xs overflow-x-auto border border-slate-800">
+                 <BlockMath math="P(x_i|c) = \frac{1}{\sqrt{2\pi\sigma_{ci}^2}} e^{-\frac{(x_i - \mu_{ci})^2}{2\sigma_{ci}^2}}" />
+                 <p className="text-[10px] text-slate-500 mt-2 text-center">
+                   <InlineMath math="\mu_{ci}" />: {isVi ? "trung bình, " : "mean, "} <InlineMath math="\sigma_{ci}^2" />: {isVi ? "phương sai." : "variance."}
+                 </p>
+               </div>
              </div>
            </div>
+        </Section>
+
+        {/* 7. Spam Example Walkthrough */}
+        <Section id="spam-example" title={isVi ? "Ví dụ chi tiết: Lọc Email Spam" : "Detailed Example: Spam Email Classification"} icon="📧">
+          <p>
+            {isVi
+              ? "Hãy cùng giải chi tiết bài toán phân loại email mới E_4 là Spam (S) hay Not Spam (N) dựa trên từ điển chứa 7 từ dưới đây, sử dụng Laplace Smoothing với alpha = 1."
+              : "Let's walk through a detailed calculation to classify a new email E_4 as Spam (S) or Not Spam (N) using a 7-word dictionary and Laplace Smoothing with alpha = 1."}
+          </p>
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 overflow-hidden mt-4">
+            <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-3">
+              {isVi ? "Bước 1: Tính xác suất tiên nghiệm P(c)" : "Step 1: Calculate Prior Probability P(c)"}
+            </h4>
+            <p className="text-sm mb-4">
+              {isVi
+                ? "Giả sử tập huấn luyện có 3 email (E_1, E_2, E_3), trong đó có 1 email là Spam, 2 email là Not Spam."
+                : "Suppose our training set has 3 emails (E_1, E_2, E_3), with 1 classified as Spam and 2 as Not Spam."}
+            </p>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                <span className="text-xs font-bold text-slate-500 uppercase block mb-1">P(Spam)</span>
+                <span className="text-lg font-mono font-black text-blue-500">1 / 3 ≈ 33.3%</span>
+              </div>
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                <span className="text-xs font-bold text-slate-500 uppercase block mb-1">P(Not Spam)</span>
+                <span className="text-lg font-mono font-black text-emerald-500">2 / 3 ≈ 66.7%</span>
+              </div>
+            </div>
+
+            <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+              {isVi ? "Bước 2: Tính xác suất có điều kiện P(E_4 | c) với Laplace Smoothing (alpha = 1)" : "Step 2: Calculate Likelihood P(E_4 | c) with Laplace Smoothing (alpha = 1)"}
+            </h4>
+            <p className="text-sm mb-4">
+              {isVi
+                ? "Sử dụng Laplace Smoothing để tránh việc một từ chưa từng xuất hiện trong tập huấn luyện làm triệt tiêu toàn bộ tích xác suất (lỗi zero probability):"
+                : "Using Laplace Smoothing to prevent any zero-frequency word from zeroing out the entire product calculation:"}
+            </p>
+            <div className="bg-slate-950 p-4 rounded-xl text-white font-mono text-xs overflow-x-auto mb-4">
+              <BlockMath math="P(w_i|c) = \frac{\text{Số lần từ } w_i \text{ xuất hiện trong lớp } c + 1}{\text{Tổng số từ trong lớp } c + \text{Kích thước từ điển } d}" />
+            </div>
+            <p className="text-sm leading-relaxed mb-6">
+              {isVi
+                ? "Tính toán tích xác suất cho email mới E_4 gồm các từ xuất hiện trong từ điển:"
+                : "Multiply the word probabilities for the words present in E_4:"}
+              <br />
+              • <InlineMath math="P(Spam|E_4) \propto P(Spam) \times \prod P(w_i|Spam) \propto 0.0046" />
+              <br />
+              • <InlineMath math="P(Not Spam|E_4) \propto P(Not Spam) \times \prod P(w_i|Not Spam) \propto 0.0092" />
+            </p>
+
+            <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+              {isVi ? "Bước 3: Chuẩn hóa xác suất và Đưa ra kết luận" : "Step 3: Normalize Probabilities and Classify"}
+            </h4>
+            <p className="text-sm mb-4">
+              {isVi
+                ? "Ta đưa các xác suất tỉ lệ thuận ở trên về dạng phần trăm bằng cách chia cho tổng của chúng (0.0046 + 0.0092 = 0.0138):"
+                : "We normalize the proportional values to actual percentages by dividing them by their sum (0.0046 + 0.0092 = 0.0138):"}
+            </p>
+            <div className="space-y-3 mb-4">
+              <div>
+                <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
+                  <span>{isVi ? "Xác suất là Spam" : "Spam Probability"}</span>
+                  <span>33.4%</span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+                  <div className="bg-blue-500 h-2 rounded-full" style={{ width: '33.4%' }} />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
+                  <span>{isVi ? "Xác suất là Not Spam" : "Not Spam Probability"}</span>
+                  <span>66.6%</span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+                  <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '66.6%' }} />
+                </div>
+              </div>
+            </div>
+            <InfoBox variant="warning">
+              💡 {isVi
+                ? "Vì xác suất Not Spam (66.6%) cao hơn Spam (33.4%), mô hình quyết định phân loại email E_4 là NOT SPAM."
+                : "Since Not Spam probability (66.6%) is higher than Spam (33.4%), the model classifies email E_4 as NOT SPAM."}
+            </InfoBox>
+          </div>
         </Section>
 
         {/* 7. Pros/Cons */}
@@ -499,8 +620,9 @@ print("Prediction for new email:", "Spam" if model.predict(X_new)[0] == 1 else "
               { id: 'math', text: isVi ? "4. Toán học" : "4. Math" },
               { id: 'simulator', text: isVi ? "5. Mô phỏng Spam" : "5. Simulator" },
               { id: 'variants', text: isVi ? "6. Các biến thể" : "6. Variants" },
-              { id: 'pros-cons', text: isVi ? "7. Ưu / Nhược" : "7. Pros & Cons" },
-              { id: 'python', text: isVi ? "8. Code Python" : "8. Python" },
+              { id: 'spam-example', text: isVi ? "7. Ví dụ Lọc Spam" : "7. Spam Walkthrough" },
+              { id: 'pros-cons', text: isVi ? "8. Ưu / Nhược" : "8. Pros & Cons" },
+              { id: 'python', text: isVi ? "9. Code Python" : "9. Python" },
             ].map(item => (
               <a 
                 key={item.id} 

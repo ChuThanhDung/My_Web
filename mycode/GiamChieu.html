@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCA, SVD & LDA — Giảm Chiều Dữ Liệu</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a0f; --bg2:#12121a; --bg3:#1a1a26; --card:#1e1e2e; --border:#2a2a3e;
+    --text:#e4e4f0; --muted:#7a7a9a;
+    --acc:#7c6bff; --acc2:#ff6b9d; --acc3:#6bffd4; --acc4:#ffc96b; --acc5:#ff8c6b;
+    --mono:'Space Mono',monospace; --sans:'Be Vietnam Pro',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.7;overflow-x:hidden;}
+ 
+  /* NAV */
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,15,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;gap:1.5rem;height:54px;overflow-x:auto;}
+  nav .logo{font-family:var(--mono);font-size:12px;color:var(--acc);letter-spacing:.1em;white-space:nowrap;flex-shrink:0;}
+  nav a{font-size:12px;color:var(--muted);text-decoration:none;transition:color .2s;white-space:nowrap;cursor:pointer;}
+  nav a:hover,nav a.active{color:var(--acc);}
+ 
+  /* HERO */
+  .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:100px 4rem 4rem;position:relative;overflow:hidden;}
+  .hgrid{position:absolute;inset:0;background-image:linear-gradient(rgba(124,107,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(124,107,255,.055) 1px,transparent 1px);background-size:48px 48px;}
+  .hglow{position:absolute;top:-200px;left:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(124,107,255,.15) 0%,transparent 70%);pointer-events:none;}
+  .hglow2{position:absolute;bottom:-150px;right:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(107,255,212,.1) 0%,transparent 70%);pointer-events:none;}
+  .hero-tag{font-family:var(--mono);font-size:11px;color:var(--acc);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.5rem;}
+  .hero h1{font-size:clamp(2.2rem,5vw,4.2rem);font-weight:700;line-height:1.1;background:linear-gradient(135deg,#fff 30%,var(--acc) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1.5rem;max-width:750px;}
+  .hero p{font-size:1.1rem;color:var(--muted);max-width:600px;margin-bottom:3rem;}
+  .hero-cards{display:flex;gap:1rem;flex-wrap:wrap;}
+  .hcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.4rem;cursor:pointer;transition:all .25s;text-decoration:none;color:var(--text);min-width:140px;}
+  .hcard:hover{border-color:var(--acc);transform:translateY(-2px);}
+  .hcard .icon{font-size:1.4rem;margin-bottom:.4rem;}
+  .hcard strong{display:block;font-size:.9rem;font-weight:600;}
+  .hcard span{font-size:.75rem;color:var(--muted);}
+ 
+  /* SECTIONS */
+  section{padding:4.5rem 4rem;max-width:1100px;margin:0 auto;}
+  section>h2{font-size:1.9rem;font-weight:700;margin-bottom:.6rem;display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;}
+  .badge{font-family:var(--mono);font-size:.6rem;padding:3px 10px;border-radius:100px;background:var(--acc);color:#fff;letter-spacing:.1em;}
+  .badge2{background:var(--acc2);}
+  .badge3{background:var(--acc3);color:#000;}
+  .badge4{background:var(--acc4);color:#000;}
+  .sec-intro{color:var(--muted);font-size:1rem;margin-bottom:2.5rem;max-width:680px;}
+  hr.div{border:none;border-top:1px solid var(--border);margin:0 4rem;}
+ 
+  /* CONCEPT CARDS */
+  .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.1rem;margin-bottom:2.2rem;}
+  .cc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.4rem;transition:border-color .2s,transform .2s;}
+  .cc:hover{border-color:var(--acc);transform:translateY(-2px);}
+  .chip{display:inline-block;font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:6px;margin-bottom:.7rem;letter-spacing:.05em;}
+  .cp{background:rgba(124,107,255,.15);color:var(--acc);}
+  .ct{background:rgba(107,255,212,.12);color:var(--acc3);}
+  .ck{background:rgba(255,107,157,.12);color:var(--acc2);}
+  .cg{background:rgba(255,201,107,.12);color:var(--acc4);}
+  .co{background:rgba(255,140,107,.12);color:var(--acc5);}
+  .cc h3{font-size:.95rem;font-weight:600;margin-bottom:.45rem;}
+  .cc p{font-size:.87rem;color:var(--muted);line-height:1.6;}
+ 
+  /* STEPS */
+  .steps{display:flex;flex-direction:column;gap:0;}
+  .step{display:flex;gap:1.4rem;}
+  .step-line{display:flex;flex-direction:column;align-items:center;flex-shrink:0;}
+  .snum{width:34px;height:34px;border-radius:50%;background:var(--acc);color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1;}
+  .scon{width:1px;flex:1;min-height:28px;background:linear-gradient(var(--acc),transparent);margin:4px 0;}
+  .step:last-child .scon{display:none;}
+  .step-body{padding-bottom:1.8rem;flex:1;}
+  .step-body h3{font-size:.97rem;font-weight:600;margin-bottom:.35rem;margin-top:5px;}
+  .step-body p{font-size:.87rem;color:var(--muted);}
+  .formula{font-family:var(--mono);font-size:.84rem;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;padding:.65rem 1rem;margin:.65rem 0;color:var(--acc3);overflow-x:auto;white-space:pre;}
+ 
+  /* CALLOUT */
+  .callout{background:rgba(124,107,255,.08);border:1px solid rgba(124,107,255,.25);border-radius:12px;padding:1.1rem 1.4rem;margin:1.4rem 0;display:flex;gap:.7rem;}
+  .callout-icon{font-size:1.1rem;flex-shrink:0;}
+  .callout-text{font-size:.88rem;color:var(--text);}
+  .callout-text strong{color:var(--acc);}
+  .callout.warn{background:rgba(255,201,107,.07);border-color:rgba(255,201,107,.25);}
+  .callout.warn strong{color:var(--acc4);}
+  .callout.green{background:rgba(107,255,212,.07);border-color:rgba(107,255,212,.25);}
+  .callout.green strong{color:var(--acc3);}
+  .callout.pink{background:rgba(255,107,157,.07);border-color:rgba(255,107,157,.25);}
+  .callout.pink strong{color:var(--acc2);}
+ 
+  /* DEMO */
+  .demo-box{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1.5rem;}
+  .demo-hd{padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .demo-hd h3{font-size:.92rem;font-weight:600;}
+  .demo-hd span{font-size:.78rem;color:var(--muted);}
+  .demo-body{padding:1.4rem;}
+  canvas{display:block;}
+  .controls{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;align-items:center;}
+  .controls label{font-size:.83rem;color:var(--muted);display:flex;align-items:center;gap:.5rem;}
+  .controls input[type=range]{width:110px;accent-color:var(--acc);}
+  .controls button{background:var(--acc);color:#fff;border:none;border-radius:8px;padding:6px 13px;font-family:var(--sans);font-size:.82rem;font-weight:500;cursor:pointer;transition:opacity .2s;}
+  .controls button:hover{opacity:.85;}
+  .stat-row{display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap;}
+  .stat{flex:1;min-width:110px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:.65rem .9rem;}
+  .stat .slabel{font-size:.72rem;color:var(--muted);margin-bottom:.2rem;}
+  .stat .sval{font-family:var(--mono);font-size:1rem;color:var(--acc3);}
+ 
+  /* SVD DIAGRAM */
+  .svd-diagram{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin:1.5rem 0;overflow-x:auto;}
+  .svd-row{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;justify-content:center;margin:.8rem 0;}
+  .mat{display:flex;flex-direction:column;align-items:center;gap:.3rem;}
+  .mat-label{font-family:var(--mono);font-size:.75rem;color:var(--muted);}
+  .mat-box{border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.85rem;font-weight:700;padding:.5rem .8rem;}
+  .mat-eq{font-size:1.4rem;color:var(--muted);}
+  .mat-times{font-size:1.1rem;color:var(--muted);}
+  .mat-u{background:rgba(124,107,255,.2);border:1px solid var(--acc);color:var(--acc);}
+  .mat-s{background:rgba(107,255,212,.15);border:1px solid var(--acc3);color:var(--acc3);}
+  .mat-v{background:rgba(255,107,157,.15);border:1px solid var(--acc2);color:var(--acc2);}
+  .mat-x{background:rgba(255,201,107,.15);border:1px solid var(--acc4);color:var(--acc4);}
+  .mat-dim{font-size:.7rem;color:var(--muted);font-family:var(--mono);}
+ 
+  /* COMPARE TABLE */
+  .cwrap{overflow-x:auto;}
+  table.cmp{width:100%;border-collapse:collapse;font-size:.88rem;}
+  table.cmp th{background:var(--bg3);padding:.7rem 1rem;text-align:left;font-weight:600;border-bottom:2px solid var(--acc);font-size:.82rem;}
+  table.cmp td{padding:.65rem 1rem;border-bottom:1px solid var(--border);color:var(--muted);}
+  table.cmp tr:hover td{background:var(--bg3);color:var(--text);}
+  table.cmp td:first-child{color:var(--text);font-weight:500;}
+  .ok{color:var(--acc3);} .no{color:var(--acc2);}
+ 
+  /* TAGS */
+  .tags{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem;}
+  .tag{font-family:var(--mono);font-size:.73rem;padding:4px 10px;border-radius:100px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);}
+ 
+  /* POWER METHOD */
+  .algo-box{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:1.3rem 1.5rem;margin:1rem 0;}
+  .algo-box h4{font-size:.9rem;font-weight:600;margin-bottom:.8rem;color:var(--acc4);}
+  .algo-step{display:flex;gap:.75rem;margin:.5rem 0;font-size:.85rem;}
+  .algo-step .n{font-family:var(--mono);font-size:.8rem;color:var(--acc4);flex-shrink:0;padding-top:.05rem;}
+  .algo-step p{color:var(--muted);}
+  .algo-step code{font-family:var(--mono);color:var(--acc3);font-size:.82rem;}
+ 
+  footer{text-align:center;padding:3rem;font-size:.83rem;color:var(--muted);border-top:1px solid var(--border);}
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+  @media(max-width:700px){
+    .hero{padding:100px 1.5rem 3rem;}
+    section{padding:3rem 1.5rem;}
+    hr.div{margin:0 1.5rem;}
+    nav{padding:0 1rem;gap:1rem;}
+  }
+</style>
+</head>
+<body>
+ 
+<nav>
+  <span class="logo">PCA×SVD×LDA</span>
+  <a href="#overview">Tổng quan</a>
+  <a href="#pca">PCA</a>
+  <a href="#svd">SVD & PCA</a>
+  <a href="#optk">Chọn k</a>
+  <a href="#practice">Thực tế</a>
+  <a href="#power">Power Method</a>
+  <a href="#lda">LDA</a>
+  <a href="#compare">So sánh</a>
+</nav>
+ 
+<!-- HERO -->
+<div class="hero">
+  <div class="hgrid"></div><div class="hglow"></div><div class="hglow2"></div>
+  <div class="hero-tag">Machine Learning · HUS 2021 · Cao Văn Chung</div>
+  <h1>Giảm Chiều Dữ Liệu<br>PCA, SVD & LDA</h1>
+  <p>Giải thích đầy đủ toàn bộ bài giảng — từ lý thuyết SVD, PCA thuần túy, chọn số chiều tối ưu, xử lý dữ liệu lớn, đến LDA phân tích phân biệt lớp.</p>
+  <div class="hero-cards">
+    <a class="hcard" href="#overview"><div class="icon">🧭</div><strong>Tổng quan</strong><span>Tại sao giảm chiều?</span></a>
+    <a class="hcard" href="#pca"><div class="icon">📐</div><strong>PCA</strong><span>Thành phần chính</span></a>
+    <a class="hcard" href="#svd"><div class="icon">🔢</div><strong>SVD & PCA</strong><span>Khai triển kỳ dị</span></a>
+    <a class="hcard" href="#optk"><div class="icon">🎯</div><strong>Chọn k tối ưu</strong><span>Bao nhiêu % thông tin?</span></a>
+    <a class="hcard" href="#practice"><div class="icon">⚙️</div><strong>Thực tế</strong><span>d>N & large-scale</span></a>
+    <a class="hcard" href="#power"><div class="icon">⚡</div><strong>Power Method</strong><span>Xấp xỉ trị riêng</span></a>
+    <a class="hcard" href="#lda"><div class="icon">🏷️</div><strong>LDA</strong><span>Phân biệt tuyến tính</span></a>
+  </div>
+</div>
+ 
+<!-- OVERVIEW -->
+<hr class="div">
+<section id="overview">
+  <h2>🧭 Tại sao cần giảm chiều? <span class="badge">OVERVIEW</span></h2>
+  <p class="sec-intro">Dữ liệu thực tế thường có hàng nghìn chiều. Làm việc trực tiếp rất tốn kém. Giảm chiều là bước tiền xử lý quan trọng.</p>
+  <div class="cgrid">
+    <div class="cc"><span class="chip co">Vấn đề</span><h3>Curse of dimensionality</h3><p>Số chiều d rất lớn → lưu trữ và tính toán khó khăn, tốn kém, tốc độ thấp. Ví dụ: ảnh 1000×1000 = 10⁶ chiều.</p></div>
+    <div class="cc"><span class="chip cp">Giải pháp</span><h3>Ánh xạ chiều thấp hơn</h3><p>Tìm f : x ∈ ℝᵈ → z ∈ ℝᵏ (k ≪ d) sao cho thông tin mất mát ít nhất có thể. Đây cũng là nén dữ liệu.</p></div>
+    <div class="cc"><span class="chip ct">Lợi ích</span><h3>Trực quan hoá</h3><p>Về k=2 hoặc k=3 để vẽ và hiểu phân bố dữ liệu bằng mắt thường — điều không thể ở chiều cao.</p></div>
+    <div class="cc"><span class="chip cg">Ý tưởng cốt lõi</span><h3>Hệ cơ sở mới</h3><p>Không bỏ ngẫu nhiên vài chiều cũ (mất thông tin đều). Tìm hệ tọa độ mới mà các chiều quan trọng rất khác nhau — rồi mới bỏ những chiều ít quan trọng.</p></div>
+  </div>
+  <div class="callout">
+    <span class="callout-icon">💡</span>
+    <div class="callout-text"><strong>Quan sát chính:</strong> Dữ liệu thực không phân bố ngẫu nhiên — chúng thường "sống" gần các đường/mặt phẳng đặc biệt trong không gian. PCA khai thác tính chất này để tìm các đường/mặt đó.</div>
+  </div>
+</section>
+ 
+<!-- PCA -->
+<hr class="div">
+<section id="pca">
+  <h2>📐 Principal Component Analysis <span class="badge">PCA</span></h2>
+  <p class="sec-intro">PCA tìm hệ cơ sở trực chuẩn mới — trong đó "thông tin" (phương sai) tập trung ở k chiều đầu, phần còn lại có thể bỏ.</p>
+ 
+  <div class="cgrid">
+    <div class="cc"><span class="chip cp">Trực giác</span><h3>Phương sai = Thông tin</h3><p>Chiều có phương sai lớn → dữ liệu phân tán nhiều → chứa nhiều thông tin. PCA ưu tiên giữ lại các chiều phương sai lớn nhất.</p></div>
+    <div class="cc"><span class="chip ct">Hàm tổn thất</span><h3>Tối thiểu lỗi tái tạo</h3><p>J = (1/N)‖X − X̃‖²_F → min. Tức là tìm không gian con k chiều mà phép chiếu lên đó "mô tả lại" dữ liệu gốc tốt nhất.</p></div>
+    <div class="cc"><span class="chip cg">Tương đương</span><h3>Tối đa phương sai</h3><p>Cực tiểu J ⟺ cực đại F = L − J = Σᵢ₌₁ᵏ uᵢᵀSuᵢ. Tức là tối đa tổng phương sai chiếu lên k hướng được chọn.</p></div>
+    <div class="cc"><span class="chip ck">Kết quả lý thuyết</span><h3>Định lý tối ưu PCA</h3><p>F đạt max = Σᵢ₌₁ᵏ λᵢ khi {uᵢ} là k vector riêng trực chuẩn ứng với k giá trị riêng lớn nhất λ₁ ≥ λ₂ ≥ ... ≥ λk của S.</p></div>
+  </div>
+ 
+  <h3 style="font-size:1rem;font-weight:600;margin-bottom:1.3rem;color:var(--acc3)">📋 Quy trình PCA — từng bước chi tiết</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-line"><div class="snum">1</div><div class="scon"></div></div>
+      <div class="step-body">
+        <h3>Tính vector kỳ vọng (mean)</h3>
+        <p>Tính giá trị trung bình "tâm" của đám mây dữ liệu:</p>
+        <div class="formula">x̄ = (1/N) Σₙ₌₁ᴺ xₙ  ∈ ℝᵈ</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-line"><div class="snum">2</div><div class="scon"></div></div>
+      <div class="step-body">
+        <h3>Chuẩn hóa dữ liệu — "center"</h3>
+        <p>Dịch về gốc tọa độ để x̄ = 0, đơn giản hóa tính toán:</p>
+        <div class="formula">x̂ₙ = xₙ − x̄,   n = 1,...,N
+X̂ = (x̂₁, ..., x̂ₙ) ∈ ℝᵈˣᴺ</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-line"><div class="snum">3</div><div class="scon"></div></div>
+      <div class="step-body">
+        <h3>Tính ma trận hiệp phương sai</h3>
+        <p>Ma trận đối xứng nửa xác định dương mã hóa độ phân tán và tương quan giữa các chiều:</p>
+        <div class="formula">S = (1/N) X̂ X̂ᵀ ∈ ℝᵈˣᵈ</div>
+        <p>Vì S nửa xác định dương → tất cả giá trị riêng λᵢ ≥ 0 (thực).</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-line"><div class="snum">4</div><div class="scon"></div></div>
+      <div class="step-body">
+        <h3>Tính giá trị riêng & vector riêng của S</h3>
+        <p>Giải phương trình đặc trưng, sắp xếp giảm dần:</p>
+        <div class="formula">S uᵢ = λᵢ uᵢ,   λ₁ ≥ λ₂ ≥ ... ≥ λd ≥ 0
+{uᵢ} trực chuẩn: uᵢᵀuⱼ = δᵢⱼ</div>
+        <p>λᵢ = phương sai của dữ liệu theo hướng uᵢ. Tổng tất cả phương sai = trace(S) = Σλᵢ (bất biến với mọi hệ cơ sở!).</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-line"><div class="snum">5</div><div class="scon"></div></div>
+      <div class="step-body">
+        <h3>Xây dựng ma trận Uₖ</h3>
+        <p>Lấy k vector riêng đầu tiên (ứng với k giá trị riêng lớn nhất):</p>
+        <div class="formula">Uₖ = [u₁ | u₂ | ... | uₖ] ∈ ℝᵈˣᵏ
+Uₖᵀ Uₖ = Iₖ  (trực chuẩn)</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-line"><div class="snum">6</div></div>
+      <div class="step-body">
+        <h3>Chiếu dữ liệu & tái tạo</h3>
+        <div class="formula">Z = Uₖᵀ X̂  ∈ ℝᵏˣᴺ         (dữ liệu mới, k chiều)
+x ≈ Uₖ Z + x̄             (tái tạo gần đúng)</div>
+        <p>Z là "tọa độ" của mỗi điểm dữ liệu trong hệ cơ sở mới k chiều.</p>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<!-- SVD -->
+<hr class="div">
+<section id="svd">
+  <h2>🔢 SVD trong PCA <span class="badge badge3">SVD</span></h2>
+  <p class="sec-intro">Khai triển kỳ dị (Singular Value Decomposition) là nền tảng toán học của PCA. Hiểu SVD = hiểu sâu PCA.</p>
+ 
+  <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--acc3)">🔑 Full SVD</h3>
+  <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">Mọi ma trận X ∈ ℝᵈˣᴺ đều có thể phân tích thành:</p>
+ 
+  <div class="svd-diagram">
+    <div class="svd-row">
+      <div class="mat">
+        <div class="mat-box mat-x" style="width:64px;height:80px">X</div>
+        <div class="mat-dim">d × N</div>
+        <div class="mat-label">Ma trận dữ liệu</div>
+      </div>
+      <div class="mat-eq">=</div>
+      <div class="mat">
+        <div class="mat-box mat-u" style="width:64px;height:80px">U</div>
+        <div class="mat-dim">d × d</div>
+        <div class="mat-label">Trực giao (left)</div>
+      </div>
+      <div class="mat-times">×</div>
+      <div class="mat">
+        <div class="mat-box mat-s" style="width:80px;height:80px">Σ</div>
+        <div class="mat-dim">d × N</div>
+        <div class="mat-label">Đường chéo ≥ 0</div>
+      </div>
+      <div class="mat-times">×</div>
+      <div class="mat">
+        <div class="mat-box mat-v" style="width:80px;height:64px">Vᵀ</div>
+        <div class="mat-dim">N × N</div>
+        <div class="mat-label">Trực giao (right)</div>
+      </div>
+    </div>
+    <div style="font-size:.83rem;color:var(--muted);text-align:center;margin-top:.5rem">σ₁ ≥ σ₂ ≥ ... ≥ σₘᵢₙ₍ᵈ,ᴺ₎ ≥ 0 là các <strong style="color:var(--acc3)">singular values</strong> (giá trị kỳ dị)</div>
+  </div>
+ 
+  <h3 style="font-size:1rem;font-weight:600;margin:1.8rem 0 1rem;color:var(--acc3)">✂️ Truncated SVD (xấp xỉ rank-k)</h3>
+  <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">Bài toán: Tìm A với rank(A) ≤ k để ‖X − A‖_F nhỏ nhất. Đây là bài toán xấp xỉ ma trận tối ưu.</p>
+ 
+  <div class="svd-diagram">
+    <div class="svd-row">
+      <div class="mat">
+        <div class="mat-box mat-x" style="width:48px;height:80px">A</div>
+        <div class="mat-dim">d × N</div>
+        <div class="mat-label">rank = k</div>
+      </div>
+      <div class="mat-eq">=</div>
+      <div class="mat">
+        <div class="mat-box mat-u" style="width:48px;height:80px">Uₖ</div>
+        <div class="mat-dim">d × k</div>
+        <div class="mat-label">k cột đầu U</div>
+      </div>
+      <div class="mat-times">×</div>
+      <div class="mat">
+        <div class="mat-box mat-s" style="width:48px;height:48px">Σₖ</div>
+        <div class="mat-dim">k × k</div>
+        <div class="mat-label">k giá trị kỳ dị đầu</div>
+      </div>
+      <div class="mat-times">×</div>
+      <div class="mat">
+        <div class="mat-box mat-v" style="width:80px;height:48px">Vₖᵀ</div>
+        <div class="mat-dim">k × N</div>
+        <div class="mat-label">k hàng đầu Vᵀ</div>
+      </div>
+    </div>
+    <div style="font-size:.83rem;color:var(--acc);text-align:center;margin-top:.5rem">
+      ✅ Nghiệm tối ưu — lỗi tối thiểu: ‖X − A‖_F = √(σₖ₊₁² + ... + σₘᵢₙ²)
+    </div>
+  </div>
+ 
+  <div class="callout green" style="margin-top:1.5rem">
+    <span class="callout-icon">🔗</span>
+    <div class="callout-text">
+      <strong>PCA = Truncated SVD của X̂!</strong><br>
+      Sau khi chuẩn hóa (x̄ = 0), bài toán PCA trở thành:<br>
+      <code style="font-family:var(--mono);color:var(--acc3);font-size:.83rem">min_{Uₖ, Z} ‖X̂ − UₖZ‖_F   s.t.  UₖᵀUₖ = Iₖ</code><br>
+      Nghiệm chính là Uₖ = k cột trái đầu của SVD của X̂, và Z = Σₖ Vₖᵀ. Tức là <strong>Truncated SVD của ma trận dữ liệu đã chuẩn hóa.</strong>
+    </div>
+  </div>
+ 
+  <div class="cgrid" style="margin-top:1.5rem">
+    <div class="cc"><span class="chip cp">Liên hệ λ và σ</span><h3>Giá trị riêng ↔ Kỳ dị</h3><p>Nếu X = UΣVᵀ thì S = (1/N) XX̂ᵀ = U(Σ²/N)Uᵀ. Do đó <strong style="color:var(--acc)">λᵢ = σᵢ²/N</strong>. Tính S rồi tìm trị riêng, hoặc tính SVD của X̂ — cho cùng kết quả Uₖ.</p></div>
+    <div class="cc"><span class="chip ct">Compact SVD</span><h3>SVD thu gọn</h3><p>Khi d ≠ N, ma trận Σ không vuông. Compact SVD chỉ giữ lại các singular values ≠ 0, bỏ các cột/hàng zero. Tiết kiệm bộ nhớ hơn Full SVD.</p></div>
+    <div class="cc"><span class="chip cg">Ý nghĩa hình học</span><h3>Phân tích dữ liệu</h3><p>Mỗi số hạng σᵢ uᵢ vᵢᵀ là "thành phần" rank-1 của X. Thành phần đầu (σ₁ lớn nhất) chứa nhiều thông tin nhất. Truncated SVD giữ lại k thành phần quan trọng nhất.</p></div>
+  </div>
+ 
+  <!-- INTERACTIVE SVD DEMO -->
+  <div class="demo-box" style="margin-top:1.5rem">
+    <div class="demo-hd"><h3>Demo: PCA = Truncated SVD trực quan</h3><span>Chạy demo tương tác bên dưới</span></div>
+    <div class="demo-body">
+      <canvas id="scatter" width="680" height="320" style="width:100%;border-radius:8px;background:var(--bg3)"></canvas>
+      <div class="controls">
+        <label>N điểm: <input type="range" id="nSl" min="30" max="200" value="80" oninput="genData()"></label>
+        <label>Góc σ₁: <input type="range" id="angSl" min="0" max="170" value="35" oninput="genData()"> <span id="angOut">35°</span></label>
+        <label>σ₁/σ₂: <input type="range" id="ratSl" min="10" max="95" value="65" oninput="genData()"> <span id="ratOut">6.5</span></label>
+        <button onclick="genData()">🔀 Ngẫu nhiên</button>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><div class="slabel">σ₁ (singular value)</div><div class="sval" id="sv1">—</div></div>
+        <div class="stat"><div class="slabel">σ₂</div><div class="sval" id="sv2">—</div></div>
+        <div class="stat"><div class="slabel">λ₁ = σ₁²/N</div><div class="sval" id="lam1">—</div></div>
+        <div class="stat"><div class="slabel">PC1 giữ lại</div><div class="sval" id="pct">—</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<!-- OPTIMAL K -->
+<hr class="div">
+<section id="optk">
+  <h2>🎯 Chọn Số Chiều k Tối Ưu <span class="badge badge4">OPTIMAL k</span></h2>
+  <p class="sec-intro">k được chọn dựa trên lượng thông tin muốn giữ lại — đo bằng tổng phương sai tích lũy.</p>
+ 
+  <div class="cgrid">
+    <div class="cc"><span class="chip cp">Tổng phương sai</span><h3>Bất biến với hệ cơ sở</h3><p>L = trace(S) = Σᵢ λᵢ không đổi dù ta đổi hệ tọa độ. Đây là tổng thông tin của dữ liệu.</p></div>
+    <div class="cc"><span class="chip ct">Thông tin giữ lại</span><h3>k chiều đầu → Σᵢ₌₁ᵏ λᵢ</h3><p>PCA với k chiều giữ lại phương sai = Σᵢ₌₁ᵏ λᵢ. Càng nhiều phương sai giữ lại, dữ liệu mới càng trung thực với dữ liệu gốc.</p></div>
+    <div class="cc"><span class="chip cg">Tỷ lệ thông tin</span><h3>Explained Variance Ratio</h3><p>rₖ = Σᵢ₌₁ᵏ λᵢ / Σⱼ₌₁ᵈ λⱼ. Chọn k nhỏ nhất sao cho rₖ ≥ 0.99 (giữ 99% thông tin).</p></div>
+    <div class="cc"><span class="chip co">Thực tế</span><h3>Dữ liệu "thật" nằm trên subspace</h3><p>Khi dữ liệu phân bố quanh một không gian con, λ₁,...,λₖ >> λₖ₊₁,...,λd → có thể chọn k rất nhỏ mà vẫn giữ 99%.</p></div>
+  </div>
+ 
+  <div class="callout warn">
+    <span class="callout-icon">📊</span>
+    <div class="callout-text">
+      <strong>Cách dùng Scree Plot:</strong> Vẽ đồ thị λᵢ theo i. Tìm "khuỷu tay" (elbow) — điểm mà sau đó các λ giảm rất chậm. Đó là k tốt. Hoặc vẽ tỷ lệ tích lũy rₖ và chọn k khi đường này đạt 95–99%.
+    </div>
+  </div>
+ 
+  <div class="demo-box" style="margin-top:1.5rem">
+    <div class="demo-hd"><h3>Biểu đồ phương sai & Scree Plot</h3><span>Tỷ lệ tích lũy (đường đỏ)</span></div>
+    <div class="demo-body">
+      <canvas id="varChart" height="200" style="width:100%;"></canvas>
+      <div class="controls">
+        <label>Số thành phần: <input type="range" id="kSel" min="1" max="8" value="3" oninput="updateVarChart()"> <span id="kOut">k=3</span></label>
+        <div class="stat-row" style="margin-top:.5rem;flex:1">
+          <div class="stat"><div class="slabel">Thông tin giữ lại</div><div class="sval" id="infoKept">—</div></div>
+          <div class="stat"><div class="slabel">Thông tin bỏ đi</div><div class="sval" id="infoLost">—</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<!-- PRACTICE -->
+<hr class="div">
+<section id="practice">
+  <h2>⚙️ Áp Dụng PCA Thực Tế <span class="badge">PRACTICE</span></h2>
+  <p class="sec-intro">Hai tình huống đặc biệt trong thực tế cần xử lý khác nhau: khi số chiều lớn hơn số mẫu (d > N), và khi dữ liệu cực lớn.</p>
+ 
+  <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--acc4)">📌 Trường hợp 1: d > N (số chiều lớn hơn số mẫu)</h3>
+  <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">Ví dụ: 100 ảnh genome (N=100) mỗi ảnh 50.000 gene (d=50.000). Ma trận S ∈ ℝ⁵⁰⁰⁰⁰ˣ⁵⁰⁰⁰⁰ — không thể tính trực tiếp!</p>
+ 
+  <div class="cgrid">
+    <div class="cc"><span class="chip co">Vấn đề</span><h3>S quá lớn để tính</h3><p>S = (1/N)XX̂ᵀ ∈ ℝᵈˣᵈ với d rất lớn → tính giá trị riêng bất khả thi về bộ nhớ và thời gian.</p></div>
+    <div class="cc"><span class="chip ct">Mẹo quan trọng</span><h3>Chuyển sang T = XᵀX</h3><p>T = XᵀX ∈ ℝᴺˣᴺ, nhỏ hơn nhiều (N ≪ d)! Tính trị riêng của T thay vì S.</p></div>
+    <div class="cc"><span class="chip cp">Liên hệ</span><h3>Tính chất: AB và BA có cùng eigenvalues</h3><p>Nếu (λ, u) là cặp trị riêng của T = XᵀX, thì (λ, Xu) là cặp trị riêng của S = XXᵀ. Chỉ cần chuẩn hóa lại Xu là có vector riêng của S!</p></div>
+  </div>
+ 
+  <div class="algo-box">
+    <h4>✏️ Quy trình khi d > N:</h4>
+    <div class="algo-step"><span class="n">1.</span><p>Tính <code>T = XᵀX ∈ ℝᴺˣᴺ</code> (nhỏ, tính được)</p></div>
+    <div class="algo-step"><span class="n">2.</span><p>Tìm K trị riêng & vector riêng của T: <code>T·v = λ·v</code></p></div>
+    <div class="algo-step"><span class="n">3.</span><p>Vector riêng của S là: <code>u = Xv / ‖Xv‖₂</code> (theo tính chất 3)</p></div>
+    <div class="algo-step"><span class="n">4.</span><p>Chú ý: phải chọn <code>K < rank(X) ≤ N</code></p></div>
+  </div>
+ 
+  <h3 style="font-size:1rem;font-weight:600;margin:2rem 0 1rem;color:var(--acc4)">📌 Trường hợp 2: Large-scale (N và d đều rất lớn)</h3>
+  <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">Ví dụ: 1 triệu ảnh 1000×1000 pixel. Ngay cả T = XᵀX cũng quá lớn. Cần thuật toán khác.</p>
+ 
+  <div class="cgrid">
+    <div class="cc"><span class="chip co">Giải pháp 1</span><h3>Power Method</h3><p>Thuật toán lặp xấp xỉ trị riêng lớn nhất và vector riêng tương ứng. Hội tụ nhanh, không cần toàn bộ S.</p></div>
+    <div class="cc"><span class="chip cp">Giải pháp 2</span><h3>Incremental PCA</h3><p>Thực hiện PCA trên tập con nhỏ vừa với bộ nhớ, rồi dần cập nhật kết quả với tập con mới cho đến khi hội tụ.</p></div>
+    <div class="cc"><span class="chip cg">Mở rộng</span><h3>Các biến thể PCA</h3><p>Sparse PCA (vector riêng thưa), Kernel PCA (phi tuyến tính), Robust PCA (chịu được nhiễu nặng).</p></div>
+  </div>
+ 
+  <div class="callout warn">
+    <span class="callout-icon">⚠️</span>
+    <div class="callout-text">
+      <strong>Lưu ý quan trọng:</strong> PCA là phương pháp <strong>Unsupervised</strong> — không dùng nhãn lớp. Khi áp dụng cho bài toán classification, PCA đôi khi không hiệu quả hoặc thậm chí gây sai lệch vì có thể loại bỏ đúng những chiều phân biệt các lớp.
+    </div>
+  </div>
+</section>
+ 
+<!-- POWER METHOD -->
+<hr class="div">
+<section id="power">
+  <h2>⚡ Power Method <span class="badge badge4">ALGORITHM</span></h2>
+  <p class="sec-intro">Thuật toán lặp để xấp xỉ giá trị riêng lớn nhất và vector riêng của một ma trận lớn — mà không cần tính toàn bộ ma trận trị riêng.</p>
+ 
+  <div class="callout green">
+    <span class="callout-icon">💡</span>
+    <div class="callout-text"><strong>Ý tưởng:</strong> Bắt đầu từ một vector ngẫu nhiên, nhân lặp với A. Vector kết quả sẽ "nghiêng dần" về hướng vector riêng ứng với trị riêng lớn nhất (vì thành phần đó "phát triển nhanh nhất").</div>
+  </div>
+ 
+  <div class="demo-box">
+    <div class="demo-hd"><h3>Thuật toán Power Method — tìm λ₁, u₁</h3><span>Cho ma trận A nửa xác định dương</span></div>
+    <div class="demo-body">
+      <div class="algo-box" style="margin:0">
+        <h4>Input: Ma trận A ∈ ℝⁿˣⁿ nửa xác định dương</h4>
+        <div class="algo-step"><span class="n">init:</span><p>Chọn vector ngẫu nhiên <code>q⁽⁰⁾ ∈ ℝⁿ</code> với <code>‖q⁽⁰⁾‖₂ = 1</code></p></div>
+        <div class="algo-step"><span class="n">loop:</span><p>Tại mỗi bước i = 1, 2, ..., tính: <code>z = A · q⁽ⁱ⁻¹⁾</code></p></div>
+        <div class="algo-step"><span class="n">norm:</span><p>Chuẩn hóa: <code>q⁽ⁱ⁾ = z / ‖z‖₂</code></p></div>
+        <div class="algo-step"><span class="n">check:</span><p>Nếu <code>‖q⁽ⁱ⁾ − q⁽ⁱ⁻¹⁾‖₂</code> đủ nhỏ → dừng</p></div>
+        <div class="algo-step"><span class="n">out:</span><p>Trị riêng lớn nhất: <code>λ₁ = (q⁽ᵏ⁾)ᵀ A q⁽ᵏ⁾</code> &nbsp;|&nbsp; Vector riêng: <code>u₁ = q⁽ᵏ⁾</code></p></div>
+      </div>
+ 
+      <div style="margin-top:1.2rem;font-size:.9rem;color:var(--muted)">Để tìm trị riêng tiếp theo λ₂, dùng <strong style="color:var(--acc4)">Deflation</strong>:</div>
+      <div class="formula">B = A − λ₁ u₁ u₁ᵀ
+→ B có các trị riêng λ₂ ≥ λ₃ ≥ ... ≥ λₙ ≥ 0
+   với các vector riêng u₂, u₃, ..., uₙ (giống A)</div>
+      <p style="font-size:.87rem;color:var(--muted)">Áp dụng Power Method trên B để tìm λ₂, u₂. Lặp lại để tìm k cặp (λᵢ, uᵢ).</p>
+ 
+      <!-- Interactive Power Method Viz -->
+      <canvas id="powerCanvas" width="680" height="260" style="width:100%;border-radius:8px;background:var(--bg3);margin-top:1rem"></canvas>
+      <div class="controls">
+        <button onclick="runPowerStep()">▶ Chạy 1 bước</button>
+        <button onclick="runPowerAuto()" id="btnAuto">⏩ Auto</button>
+        <button onclick="resetPower()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted)">↺ Reset</button>
+        <div class="stat-row" style="flex:1;margin-top:0">
+          <div class="stat"><div class="slabel">Bước hiện tại</div><div class="sval" id="pwStep">0</div></div>
+          <div class="stat"><div class="slabel">λ₁ xấp xỉ</div><div class="sval" id="pwLam">—</div></div>
+          <div class="stat"><div class="slabel">Góc hội tụ</div><div class="sval" id="pwAng">—</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<!-- LDA -->
+<hr class="div">
+<section id="lda">
+  <h2>🏷️ Linear Discriminant Analysis <span class="badge badge2">LDA</span></h2>
+  <p class="sec-intro">LDA là phương pháp giảm chiều có giám sát — biết nhãn lớp, tìm hướng chiếu tối đa hóa khả năng phân biệt giữa các lớp.</p>
+ 
+  <div class="callout pink">
+    <span class="callout-icon">⚡</span>
+    <div class="callout-text"><strong>Tại sao cần LDA?</strong> PCA tìm hướng có phương sai lớn nhất — nhưng đó chưa chắc là hướng phân biệt tốt nhất các lớp! LDA trực tiếp tối ưu cho mục tiêu phân biệt.</div>
+  </div>
+ 
+  <div class="cgrid">
+    <div class="cc"><span class="chip cp">Tiêu chí tốt</span><h3>Khi nào phân biệt tốt?</h3><p><strong style="color:var(--acc3)">Within-class variance nhỏ</strong> (mỗi lớp gọn, ít phân tán) VÀ <strong style="color:var(--acc2)">Between-class variance lớn</strong> (các lớp cách xa nhau).</p></div>
+    <div class="cc"><span class="chip ct">Hàm mục tiêu</span><h3>Fisher's Criterion J(w)</h3><p>J(w) = wᵀSBw / wᵀSWw → max. Tỷ lệ "khoảng cách giữa lớp / độ phân tán trong lớp" sau khi chiếu xuống hướng w.</p></div>
+    <div class="cc"><span class="chip cg">Nghiệm</span><h3>Vector riêng của SW⁻¹SB</h3><p>w* = eigenvector ứng với eigenvalue lớn nhất của SW⁻¹SB. Không phụ thuộc độ dài w (tỷ lệ bất biến).</p></div>
+    <div class="cc"><span class="chip ck">Giới hạn chiều</span><h3>Tối đa C−1 chiều</h3><p>rank(SB) ≤ C−1 với C lớp → LDA cho tối đa C−1 chiều có ý nghĩa. 2 lớp → 1 chiều. 3 lớp → 2 chiều.</p></div>
+  </div>
+ 
+  <h3 style="font-size:1rem;font-weight:600;margin:2rem 0 1.3rem;color:var(--acc2)">📋 LDA Binary (2 lớp) — Từng bước</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-line"><div class="snum" style="background:var(--acc2)">1</div><div class="scon" style="background:linear-gradient(var(--acc2),transparent)"></div></div>
+      <div class="step-body">
+        <h3>Tính trung bình mỗi lớp</h3>
+        <div class="formula">m₁ = (1/N₁) Σ_{x∈X₁} x,   m₂ = (1/N₂) Σ_{x∈X₂} x</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-line"><div class="snum" style="background:var(--acc2)">2</div><div class="scon" style="background:linear-gradient(var(--acc2),transparent)"></div></div>
+      <div class="step-body">
+        <h3>Tính Between-class scatter matrix SB</h3>
+        <div class="formula">SB = (m₁ − m₂)(m₁ − m₂)ᵀ ∈ ℝᵈˣᵈ</div>
+        <p>SB đo khoảng cách bình phương giữa hai tâm lớp. SB đối xứng, rank = 1 (với binary).</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-line"><div class="snum" style="background:var(--acc2)">3</div><div class="scon" style="background:linear-gradient(var(--acc2),transparent)"></div></div>
+      <div class="step-body">
+        <h3>Tính Within-class scatter matrix SW</h3>
+        <div class="formula">SW = Σ_{x∈X₁}(x−m₁)(x−m₁)ᵀ + Σ_{x∈X₂}(x−m₂)(x−m₂)ᵀ</div>
+        <p>SW đo độ phân tán của mỗi lớp. SW đối xứng, nửa xác định dương. Nếu SW suy biến, dùng SW + λI (λ > 0 nhỏ).</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-line"><div class="snum" style="background:var(--acc2)">4</div><div class="scon" style="background:linear-gradient(var(--acc2),transparent)"></div></div>
+      <div class="step-body">
+        <h3>Giải bài toán tối ưu</h3>
+        <div class="formula">SW⁻¹SB w = J(w)·w   (bài toán eigenvalue)
+→ w* = SW⁻¹(m₁ − m₂)   (nghiệm tường minh với binary!)</div>
+        <p>Với binary LDA, có công thức tường minh: w* tỷ lệ với SW⁻¹(m₁ − m₂). Không cần tính eigenvalue phức tạp.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-line"><div class="snum" style="background:var(--acc2)">5</div></div>
+      <div class="step-body">
+        <h3>Chiếu dữ liệu</h3>
+        <div class="formula">z = w*ᵀ x  ∈ ℝ   (chiếu xuống 1 chiều)</div>
+        <p>Phân loại: xem z nằm gần m̄₁ hay m̄₂ hơn.</p>
+      </div>
+    </div>
+  </div>
+ 
+  <h3 style="font-size:1rem;font-weight:600;margin:2rem 0 1rem;color:var(--acc2)">🏷️ LDA Multinomial (C > 2 lớp)</h3>
+  <div class="cgrid">
+    <div class="cc"><span class="chip ck">Tổng quát hóa</span><h3>Ma trận W ∈ ℝᵈˣᵈ'</h3><p>Thay vì vector w, tìm ma trận W ∈ ℝᵈˣᵈ'. Dữ liệu mới: x̄ = Wᵀx ∈ ℝᵈ'. Bài toán tối ưu: max trace(WᵀSBW) / trace(WᵀSWW).</p></div>
+    <div class="cc"><span class="chip cp">SB nhiều lớp</span><h3>Between-class (C lớp)</h3><p>SB = Σₖ Nₖ(mₖ−m)(mₖ−m)ᵀ, trong đó m là mean tổng thể. SB đo khoảng cách có trọng số từ mỗi tâm lớp đến tâm chung.</p></div>
+    <div class="cc"><span class="chip ct">Số chiều tối đa</span><h3>rank(SB) ≤ C−1</h3><p>Bổ đề: rank(SB) ≤ C−1. Do đó số chiều không gian mới ≤ C−1. Đây là giới hạn cứng của LDA — không thể vượt qua.</p></div>
+  </div>
+ 
+  <div class="demo-box" style="margin-top:1.5rem">
+    <div class="demo-hd"><h3>LDA vs PCA — Demo tương tác</h3><span>Dữ liệu có 2 lớp, tìm hướng chiếu</span></div>
+    <div class="demo-body">
+      <canvas id="ldaCanvas" width="680" height="300" style="width:100%;border-radius:8px;background:var(--bg3)"></canvas>
+      <div class="controls">
+        <button onclick="showDir('pca')" id="bPCA">📊 Hướng PCA</button>
+        <button onclick="showDir('lda')" id="bLDA" style="background:var(--acc2)">🎯 Hướng LDA</button>
+        <button onclick="showDir('both')" style="background:var(--acc3);color:#000">👁 Cả hai</button>
+        <button onclick="showDir('proj')" style="background:var(--acc4);color:#000">📉 Chiếu xuống 1D</button>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><div class="slabel">SW (Within)</div><div class="sval" id="sw">—</div></div>
+        <div class="stat"><div class="slabel">SB (Between)</div><div class="sval" id="sb">—</div></div>
+        <div class="stat"><div class="slabel">J = SB/SW</div><div class="sval" id="jv">—</div></div>
+        <div class="stat"><div class="slabel">Đang hiển thị</div><div class="sval" id="modeLabel">—</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<!-- COMPARE -->
+<hr class="div">
+<section id="compare">
+  <h2>📊 So Sánh Toàn Diện <span class="badge">COMPARE</span></h2>
+  <p class="sec-intro">PCA và LDA có mục đích khác nhau, phù hợp với các bài toán khác nhau.</p>
+ 
+  <div class="cwrap">
+    <table class="cmp">
+      <thead><tr>
+        <th>Tiêu chí</th>
+        <th style="color:var(--acc)">PCA</th>
+        <th style="color:var(--acc2)">LDA</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Loại học</td><td>Unsupervised</td><td>Supervised</td></tr>
+        <tr><td>Cần nhãn lớp?</td><td><span class="no">✗ Không</span></td><td><span class="ok">✓ Bắt buộc</span></td></tr>
+        <tr><td>Mục tiêu tối ưu</td><td>Tối đa phương sai tổng thể (trace(S))</td><td>Tối đa tỷ lệ SB/SW</td></tr>
+        <tr><td>Giải bằng</td><td>Eigenvalue/vector của S = (1/N)X̂X̂ᵀ</td><td>Eigenvalue/vector của SW⁻¹SB</td></tr>
+        <tr><td>Liên hệ SVD</td><td>Truncated SVD của X̂</td><td>Không trực tiếp</td></tr>
+        <tr><td>Số chiều tối đa</td><td>min(d, N−1)</td><td>C−1 (C = số lớp)</td></tr>
+        <tr><td>Xử lý d > N</td><td><span class="ok">✓</span> Tính T = XᵀX thay S</td><td>Cần SW khả nghịch</td></tr>
+        <tr><td>Phù hợp cho</td><td>Nén dữ liệu, trực quan hóa, noise removal</td><td>Classification, nhận diện khuôn mặt</td></tr>
+        <tr><td>Rủi ro chính</td><td>Có thể phá vỡ tính phân biệt lớp</td><td>Kém nếu dữ liệu không tách tuyến tính</td></tr>
+      </tbody>
+    </table>
+  </div>
+ 
+  <div class="callout" style="margin-top:1.8rem">
+    <span class="callout-icon">🧠</span>
+    <div class="callout-text">
+      <strong>Khi nào dùng gì?</strong><br>
+      • <strong>PCA:</strong> Muốn nén, giảm nhiễu, hoặc không có nhãn lớp → dùng PCA.<br>
+      • <strong>LDA:</strong> Có nhãn lớp và muốn bảo toàn khả năng phân biệt → dùng LDA.<br>
+      • <strong>Kết hợp:</strong> Thực tế hay dùng PCA trước (loại noise, giảm d) rồi LDA sau (tối ưu phân biệt lớp) — gọi là PCA+LDA pipeline.
+    </div>
+  </div>
+ 
+  <div style="margin-top:2rem">
+    <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem">🔗 Toàn bộ kiến thức nền cần có</h3>
+    <div class="tags">
+      <span class="tag">Eigenvalue / Eigenvector</span>
+      <span class="tag">Full SVD</span>
+      <span class="tag">Truncated SVD</span>
+      <span class="tag">Compact SVD</span>
+      <span class="tag">Ma trận hiệp phương sai</span>
+      <span class="tag">Hệ cơ sở trực chuẩn</span>
+      <span class="tag">Phép chiếu trực giao</span>
+      <span class="tag">Kỳ vọng & Phương sai</span>
+      <span class="tag">Chuẩn Frobenius ‖·‖_F</span>
+      <span class="tag">Chuẩn 2 của ma trận ‖A‖₂</span>
+      <span class="tag">Trace của ma trận</span>
+      <span class="tag">Gram-Schmidt</span>
+      <span class="tag">Power Method</span>
+      <span class="tag">Optimal Rank-k Approximation</span>
+      <span class="tag">Within/Between-class variance</span>
+      <span class="tag">Fisher's Criterion</span>
+    </div>
+  </div>
+</section>
+ 
+<footer>
+  Dựa trên bài giảng Machine Learning của TS. Cao Văn Chung — Khoa Toán–Cơ–Tin, HUS, VNU Hanoi, 2021.<br>
+  Bao gồm đầy đủ: PCA, SVD trong PCA, Truncated SVD, Optimal k, d>N, Large-scale, Power Method, LDA binary & multinomial.<br>
+  Trực quan hóa tương tác bởi Claude AI
+</footer>
+ 
+<script>
+// ============================================================
+// PCA SCATTER + SVD DEMO
+// ============================================================
+const sc = document.getElementById('scatter');
+const ctx = sc.getContext('2d');
+let pts=[], pcaResult={};
+ 
+function randn(){
+  let u=0,v=0;
+  while(!u)u=Math.random(); while(!v)v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+ 
+function genData(){
+  const N=+document.getElementById('nSl').value;
+  const a=(+document.getElementById('angSl').value)*Math.PI/180;
+  const r=+document.getElementById('ratSl').value/10;
+  document.getElementById('angOut').textContent=Math.round(a*180/Math.PI)+'°';
+  document.getElementById('ratOut').textContent=r.toFixed(1);
+  pts=[];
+  for(let i=0;i<N;i++){
+    const s1=randn()*r, s2=randn();
+    pts.push({x:s1*Math.cos(a)-s2*Math.sin(a), y:s1*Math.sin(a)+s2*Math.cos(a)});
+  }
+  computeAndDraw();
+}
+ 
+function computePCA(pts){
+  const N=pts.length;
+  const mx=pts.reduce((s,p)=>s+p.x,0)/N, my=pts.reduce((s,p)=>s+p.y,0)/N;
+  const cx=pts.map(p=>p.x-mx), cy=pts.map(p=>p.y-my);
+  const sxx=cx.reduce((s,v,i)=>s+v*cx[i],0)/N;
+  const syy=cy.reduce((s,v,i)=>s+v*cy[i],0)/N;
+  const sxy=cx.reduce((s,v,i)=>s+v*cy[i],0)/N;
+  const tr=sxx+syy, det=sxx*syy-sxy*sxy;
+  const disc=Math.sqrt(Math.max(0,(tr/2)**2-det));
+  const l1=tr/2+disc, l2=Math.max(0,tr/2-disc);
+  let ex,ey;
+  if(Math.abs(sxy)>1e-9){ex=l1-syy;ey=sxy;}
+  else{ex=sxx>syy?1:0;ey=sxx>syy?0:1;}
+  const nm=Math.sqrt(ex*ex+ey*ey)||1;
+  // sigma = sqrt(N*lambda) for SVD of X
+  const sig1=Math.sqrt(N*l1), sig2=Math.sqrt(N*l2);
+  return{l1,l2,ex:ex/nm,ey:ey/nm,mx,my,sig1,sig2};
+}
+ 
+function computeAndDraw(){
+  const W=sc.offsetWidth||680, H=320;
+  sc.width=W; sc.height=H;
+  ctx.clearRect(0,0,W,H);
+  if(!pts.length) return;
+ 
+  const r=computePCA(pts); pcaResult=r;
+  let mn_x=Infinity,mx_x=-Infinity,mn_y=Infinity,mx_y=-Infinity;
+  pts.forEach(p=>{mn_x=Math.min(mn_x,p.x);mx_x=Math.max(mx_x,p.x);mn_y=Math.min(mn_y,p.y);mx_y=Math.max(mx_y,p.y);});
+  const pad=50, sc2=Math.min((W-2*pad)/(mx_x-mn_x+.01),(H-2*pad)/(mx_y-mn_y+.01));
+  const ox=W/2-(mx_x+mn_x)/2*sc2, oy=H/2+(mx_y+mn_y)/2*sc2;
+  const tX=v=>ox+v*sc2, tY=v=>oy-v*sc2;
+ 
+  ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,tY(0)); ctx.lineTo(W,tY(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(tX(0),0); ctx.lineTo(tX(0),H); ctx.stroke();
+ 
+  pts.forEach(p=>{
+    ctx.beginPath(); ctx.arc(tX(p.x),tY(p.y),3.5,0,Math.PI*2);
+    ctx.fillStyle='rgba(124,107,255,.65)'; ctx.fill();
+  });
+ 
+  const len1=Math.sqrt(r.l1)*2.8, len2=Math.sqrt(r.l2)*2.8;
+  const mx2=tX(r.mx), my2=tY(r.my);
+ 
+  // PC1 = u₁ (first left singular vector)
+  ctx.strokeStyle='#6bffd4'; ctx.lineWidth=2.5;
+  ctx.beginPath();
+  ctx.moveTo(mx2-r.ex*len1*sc2, my2+r.ey*len1*sc2);
+  ctx.lineTo(mx2+r.ex*len1*sc2, my2-r.ey*len1*sc2);
+  ctx.stroke();
+  // Arrow head
+  drawArrow(ctx, mx2, my2, mx2+r.ex*len1*sc2, my2-r.ey*len1*sc2, '#6bffd4');
+  ctx.fillStyle='#6bffd4'; ctx.font='bold 11px "Space Mono"';
+  ctx.fillText('u₁ / PC1 (σ₁='+(r.sig1).toFixed(2)+')', mx2+r.ex*len1*sc2+6, my2-r.ey*len1*sc2-6);
+ 
+  // PC2 = u₂
+  ctx.strokeStyle='#ff6b9d'; ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(mx2-r.ey*len2*sc2, my2-r.ex*len2*sc2);
+  ctx.lineTo(mx2+r.ey*len2*sc2, my2+r.ex*len2*sc2);
+  ctx.stroke();
+  drawArrow(ctx, mx2, my2, mx2+r.ey*len2*sc2, my2+r.ex*len2*sc2, '#ff6b9d');
+  ctx.fillStyle='#ff6b9d'; ctx.font='bold 11px "Space Mono"';
+  ctx.fillText('u₂ / PC2 (σ₂='+(r.sig2).toFixed(2)+')', mx2+r.ey*len2*sc2+6, my2+r.ex*len2*sc2+6);
+ 
+  // Center
+  ctx.beginPath(); ctx.arc(mx2,my2,5,0,Math.PI*2);
+  ctx.fillStyle='#ffc96b'; ctx.fill();
+ 
+  const tot=r.l1+r.l2;
+  document.getElementById('sv1').textContent=r.sig1.toFixed(3);
+  document.getElementById('sv2').textContent=r.sig2.toFixed(3);
+  document.getElementById('lam1').textContent=r.l1.toFixed(4);
+  document.getElementById('pct').textContent=(r.l1/tot*100).toFixed(1)+'%';
+ 
+  // Variance chart
+  drawVarChart([r.l1,r.l2]);
+}
+ 
+function drawArrow(ctx, x1, y1, x2, y2, color){
+  const angle=Math.atan2(y2-y1, x2-x1);
+  const al=10, aa=.4;
+  ctx.strokeStyle=color; ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.moveTo(x2-al*Math.cos(angle-aa), y2-al*Math.sin(angle-aa));
+  ctx.lineTo(x2, y2);
+  ctx.lineTo(x2-al*Math.cos(angle+aa), y2-al*Math.sin(angle+aa));
+  ctx.stroke();
+}
+ 
+// ============================================================
+// VARIANCE CHART
+// ============================================================
+let varLambdas = [3.2, 1.8, 0.9, 0.5, 0.3, 0.15, 0.08, 0.05];
+ 
+function drawVarChart(lams){
+  if(lams) varLambdas=lams;
+  const vc=document.getElementById('varChart');
+  const W=vc.offsetWidth||680, H=200;
+  vc.width=W; vc.height=H;
+  const ctx2=vc.getContext('2d');
+  ctx2.clearRect(0,0,W,H);
+ 
+  const n=varLambdas.length, maxL=varLambdas[0];
+  const tot=varLambdas.reduce((s,v)=>s+v,0);
+  const bw=Math.min(55,Math.floor((W-80)/n-8));
+  let cum=0;
+  const cumPts=[];
+ 
+  varLambdas.forEach((l,i)=>{
+    const x=50+i*(bw+10);
+    const bh=(l/maxL)*(H-55);
+    ctx2.fillStyle='rgba(124,107,255,.55)';
+    ctx2.beginPath(); ctx2.roundRect(x,H-32-bh,bw,bh,3); ctx2.fill();
+    ctx2.fillStyle='#7c6bff'; ctx2.font='10px "Space Mono"';
+    ctx2.fillText('PC'+(i+1), x+bw/2-12, H-16);
+    ctx2.fillStyle='rgba(255,255,255,.65)'; ctx2.font='10px "Space Mono"';
+    ctx2.fillText((l/tot*100).toFixed(0)+'%', x+bw/2-10, H-36-bh);
+    cum+=l;
+    cumPts.push({x:x+bw/2, y:H-32-(cum/tot)*(H-55)});
+  });
+ 
+  // Cumulative line
+  ctx2.strokeStyle='#ff6b6b'; ctx2.lineWidth=2;
+  ctx2.beginPath(); ctx2.moveTo(cumPts[0].x, cumPts[0].y);
+  cumPts.forEach(p=>ctx2.lineTo(p.x,p.y)); ctx2.stroke();
+  cumPts.forEach(p=>{
+    ctx2.beginPath(); ctx2.arc(p.x,p.y,3.5,0,Math.PI*2);
+    ctx2.fillStyle='#ff6b6b'; ctx2.fill();
+  });
+ 
+  // Selected k highlight
+  const kSel=document.getElementById('kSel');
+  if(kSel){
+    const k=+kSel.value;
+    const kx=50+Math.min(k-1,n-1)*(bw+10);
+    ctx2.strokeStyle='rgba(255,201,107,.4)'; ctx2.lineWidth=1; ctx2.setLineDash([4,3]);
+    ctx2.beginPath(); ctx2.moveTo(kx+bw,0); ctx2.lineTo(kx+bw,H-32); ctx2.stroke();
+    ctx2.setLineDash([]);
+    // Fill selected bars
+    for(let i=0;i<k&&i<n;i++){
+      const x=50+i*(bw+10), bh=(varLambdas[i]/maxL)*(H-55);
+      ctx2.fillStyle='rgba(255,201,107,.15)';
+      ctx2.beginPath(); ctx2.roundRect(x,H-32-bh,bw,bh,3); ctx2.fill();
+    }
+  }
+ 
+  ctx2.fillStyle='rgba(255,255,255,.35)'; ctx2.font='10px "Space Mono"';
+  ctx2.fillText('Scree Plot — Phương sai theo PC', 8, 13);
+  ctx2.fillStyle='#ff6b6b'; ctx2.fillRect(W-90,7,14,2);
+  ctx2.fillStyle='rgba(255,255,255,.35)'; ctx2.fillText('tích lũy', W-72, 13);
+}
+ 
+function updateVarChart(){
+  const k=+document.getElementById('kSel').value;
+  document.getElementById('kOut').textContent='k='+k;
+  const tot=varLambdas.reduce((s,v)=>s+v,0);
+  const kept=varLambdas.slice(0,k).reduce((s,v)=>s+v,0);
+  document.getElementById('infoKept').textContent=(kept/tot*100).toFixed(1)+'%';
+  document.getElementById('infoLost').textContent=((tot-kept)/tot*100).toFixed(1)+'%';
+  drawVarChart();
+}
+ 
+// ============================================================
+// POWER METHOD VIZ
+// ============================================================
+const pc = document.getElementById('powerCanvas');
+const pctx = pc.getContext('2d');
+// 2x2 symmetric matrix with eigenvalues ~4, 1
+const A = [[3.5, 1.2],[1.2, 1.5]]; // eigval ~4.2, ~0.8
+let pwQ=[Math.cos(.8), Math.sin(.8)]; // initial random unit vector
+let pwStep=0, pwAuto=false, pwTimer=null;
+let pwHistory=[];
+ 
+function resetPower(){
+  pwQ=[Math.cos(.8),Math.sin(.8)]; pwStep=0; pwHistory=[{...pwQ}];
+  clearInterval(pwTimer); pwAuto=false;
+  document.getElementById('btnAuto').textContent='⏩ Auto';
+  drawPower();
+}
+ 
+function runPowerStep(){
+  // z = A q
+  const z=[A[0][0]*pwQ[0]+A[0][1]*pwQ[1], A[1][0]*pwQ[0]+A[1][1]*pwQ[1]];
+  const nm=Math.sqrt(z[0]**2+z[1]**2);
+  pwQ=[z[0]/nm, z[1]/nm]; pwStep++;
+  pwHistory.push([pwQ[0],pwQ[1]]);
+  drawPower();
+}
+ 
+function runPowerAuto(){
+  if(pwAuto){clearInterval(pwTimer); pwAuto=false; document.getElementById('btnAuto').textContent='⏩ Auto'; return;}
+  pwAuto=true; document.getElementById('btnAuto').textContent='⏸ Pause';
+  pwTimer=setInterval(()=>{runPowerStep(); if(pwStep>=20){clearInterval(pwTimer);pwAuto=false;document.getElementById('btnAuto').textContent='⏩ Auto';}},350);
+}
+ 
+function drawPower(){
+  const W=pc.offsetWidth||680, H=260;
+  pc.width=W; pc.height=H;
+  pctx.clearRect(0,0,W,H);
+ 
+  const cx=W/2, cy=H/2, R=Math.min(cx,cy)-30;
+ 
+  // Axes
+  pctx.strokeStyle='rgba(255,255,255,.07)'; pctx.lineWidth=1;
+  pctx.beginPath(); pctx.moveTo(cx-R-10,cy); pctx.lineTo(cx+R+10,cy); pctx.stroke();
+  pctx.beginPath(); pctx.moveTo(cx,cy-R-10); pctx.lineTo(cx,cy+R+10); pctx.stroke();
+ 
+  // Unit circle
+  pctx.strokeStyle='rgba(255,255,255,.1)'; pctx.lineWidth=1;
+  pctx.beginPath(); pctx.arc(cx,cy,R,0,Math.PI*2); pctx.stroke();
+ 
+  // True eigenvector (largest eigenvalue)
+  const tr=A[0][0]+A[1][1], det=A[0][0]*A[1][1]-A[0][1]*A[1][0];
+  const disc=Math.sqrt(Math.max(0,(tr/2)**2-det));
+  const lmax=tr/2+disc;
+  let ex=lmax-A[1][1], ey=A[1][0]; const en=Math.sqrt(ex*ex+ey*ey)||1;
+  ex/=en; ey/=en;
+ 
+  pctx.strokeStyle='rgba(107,255,212,.35)'; pctx.lineWidth=1.5; pctx.setLineDash([4,4]);
+  pctx.beginPath(); pctx.moveTo(cx-ex*R,cy-ey*R); pctx.lineTo(cx+ex*R,cy+ey*R); pctx.stroke();
+  pctx.setLineDash([]);
+  pctx.fillStyle='rgba(107,255,212,.6)'; pctx.font='11px "Space Mono"';
+  pctx.fillText('u₁ thực (λmax='+lmax.toFixed(2)+')', cx+ex*R+6, cy-ey*R+4);
+ 
+  // History trail
+  if(pwHistory.length>1){
+    for(let i=1;i<pwHistory.length;i++){
+      const alpha=i/pwHistory.length*.5+.1;
+      const q0=pwHistory[i-1], q1=pwHistory[i];
+      pctx.strokeStyle=`rgba(124,107,255,${alpha})`; pctx.lineWidth=1.5;
+      pctx.beginPath();
+      pctx.moveTo(cx+q0[0]*R, cy-q0[1]*R);
+      pctx.lineTo(cx+q1[0]*R, cy-q1[1]*R);
+      pctx.stroke();
+      pctx.beginPath(); pctx.arc(cx+q1[0]*R,cy-q1[1]*R,3,0,Math.PI*2);
+      pctx.fillStyle=`rgba(124,107,255,${alpha+.2})`; pctx.fill();
+    }
+  }
+ 
+  // Current vector
+  const qx=cx+pwQ[0]*R, qy=cy-pwQ[1]*R;
+  pctx.strokeStyle='#7c6bff'; pctx.lineWidth=2.5;
+  pctx.beginPath(); pctx.moveTo(cx,cy); pctx.lineTo(qx,qy); pctx.stroke();
+  pctx.beginPath(); pctx.arc(qx,qy,6,0,Math.PI*2);
+  pctx.fillStyle='#7c6bff'; pctx.fill();
+ 
+  // Stats
+  const lam=pwQ[0]*(A[0][0]*pwQ[0]+A[0][1]*pwQ[1]) + pwQ[1]*(A[1][0]*pwQ[0]+A[1][1]*pwQ[1]);
+  const angErr=Math.acos(Math.min(1,Math.abs(pwQ[0]*ex+pwQ[1]*ey)))*180/Math.PI;
+  document.getElementById('pwStep').textContent=pwStep;
+  document.getElementById('pwLam').textContent=lam.toFixed(4);
+  document.getElementById('pwAng').textContent=angErr.toFixed(2)+'°';
+ 
+  // Labels
+  pctx.fillStyle='rgba(255,255,255,.35)'; pctx.font='11px "Space Mono"';
+  pctx.fillText('q⁽'+pwStep+'⁾', qx+8, qy-8);
+  pctx.fillText('Bước '+pwStep+' — vectơ đang hội tụ về u₁', 10, 16);
+}
+ 
+// ============================================================
+// LDA DEMO
+// ============================================================
+const lc=document.getElementById('ldaCanvas');
+const lctx=lc.getContext('2d');
+let ldaMode='both';
+ 
+// Fixed dataset
+function ldaData(){
+  function g(n,mx,my,sx,sy,seed){
+    const pts=[];
+    for(let i=0;i<n;i++){
+      const s=seed+i*7;
+      function ps(s){let x=Math.sin(s*12.9898+78.233)*43758.5453123;return x-Math.floor(x);}
+      const u=-2*Math.log(ps(s)+.0001), v=2*Math.PI*ps(s+1);
+      pts.push({x:mx+Math.sqrt(u)*Math.cos(v)*sx, y:my+Math.sqrt(u)*Math.sin(v)*sy});
+    }
+    return pts;
+  }
+  return {c1:g(40,-2.5,1,.6,.35,1), c2:g(40,2.5,-1,.6,.35,100)};
+}
+ 
+function showDir(m){
+  ldaMode=m; drawLDA();
+  document.getElementById('modeLabel').textContent=m.toUpperCase();
+}
+ 
+function drawLDA(){
+  const W=lc.offsetWidth||680, H=300;
+  lc.width=W; lc.height=H;
+  lctx.clearRect(0,0,W,H);
+ 
+  const{c1,c2}=ldaData();
+  const all=[...c1,...c2];
+  let mn_x=Infinity,mx_x=-Infinity,mn_y=Infinity,mx_y=-Infinity;
+  all.forEach(p=>{mn_x=Math.min(mn_x,p.x);mx_x=Math.max(mx_x,p.x);mn_y=Math.min(mn_y,p.y);mx_y=Math.max(mx_y,p.y);});
+ 
+  const pad=55, sc3=Math.min((W-2*pad)/(mx_x-mn_x+.01),(H-2*pad)/(mx_y-mn_y+.01));
+  const ox=W/2-(mx_x+mn_x)/2*sc3, oy=H/2+(mx_y+mn_y)/2*sc3;
+  const tX=v=>ox+v*sc3, tY=v=>oy-v*sc3;
+ 
+  lctx.strokeStyle='rgba(255,255,255,.05)'; lctx.lineWidth=1;
+  lctx.beginPath(); lctx.moveTo(0,tY(0)); lctx.lineTo(W,tY(0)); lctx.stroke();
+  lctx.beginPath(); lctx.moveTo(tX(0),0); lctx.lineTo(tX(0),H); lctx.stroke();
+ 
+  c1.forEach(p=>{lctx.beginPath();lctx.arc(tX(p.x),tY(p.y),4,0,Math.PI*2);lctx.fillStyle='rgba(107,255,212,.7)';lctx.fill();});
+  c2.forEach(p=>{lctx.beginPath();lctx.arc(tX(p.x),tY(p.y),4,0,Math.PI*2);lctx.fillStyle='rgba(255,107,157,.7)';lctx.fill();});
+ 
+  const m1={x:c1.reduce((s,p)=>s+p.x,0)/c1.length, y:c1.reduce((s,p)=>s+p.y,0)/c1.length};
+  const m2={x:c2.reduce((s,p)=>s+p.x,0)/c2.length, y:c2.reduce((s,p)=>s+p.y,0)/c2.length};
+ 
+  // SW
+  let sw00=0,sw01=0,sw11=0;
+  [...c1.map(p=>({x:p.x-m1.x,y:p.y-m1.y})),...c2.map(p=>({x:p.x-m2.x,y:p.y-m2.y}))].forEach(p=>{
+    sw00+=p.x*p.x; sw01+=p.x*p.y; sw11+=p.y*p.y;
+  });
+  const det=sw00*sw11-sw01**2+1e-9;
+  const iw00=sw11/det, iw01=-sw01/det, iw11=sw00/det;
+  const dx=m1.x-m2.x, dy=m1.y-m2.y;
+  let lx=iw00*dx+iw01*dy, ly=iw01*dx+iw11*dy;
+  const ln=Math.sqrt(lx*lx+ly*ly)||1; lx/=ln; ly/=ln;
+ 
+  // PCA direction
+  const N=all.length, gmx=all.reduce((s,p)=>s+p.x,0)/N, gmy=all.reduce((s,p)=>s+p.y,0)/N;
+  let psxx=0,psxy=0,psyy=0;
+  all.forEach(p=>{psxx+=(p.x-gmx)**2;psxy+=(p.x-gmx)*(p.y-gmy);psyy+=(p.y-gmy)**2;});
+  psxx/=N;psxy/=N;psyy/=N;
+  const ptr=psxx+psyy, pdet=psxx*psyy-psxy**2, pdisc=Math.sqrt(Math.max(0,(ptr/2)**2-pdet));
+  const pl1=ptr/2+pdisc;
+  let px=pl1-psyy, py=psxy; const pn=Math.sqrt(px*px+py*py)||1; px/=pn; py/=pn;
+ 
+  const drawDir=(ex,ey,color,label)=>{
+    const len=4.5;
+    lctx.strokeStyle=color; lctx.lineWidth=2.5;
+    lctx.beginPath();
+    lctx.moveTo(tX(gmx-ex*len), tY(gmy-ey*len));
+    lctx.lineTo(tX(gmx+ex*len), tY(gmy+ey*len));
+    lctx.stroke();
+    drawArrow(lctx, tX(gmx),tY(gmy), tX(gmx+ex*len),tY(gmy+ey*len), color);
+    lctx.fillStyle=color; lctx.font='bold 11px "Space Mono"';
+    lctx.fillText(label, tX(gmx+ex*len)+6, tY(gmy+ey*len));
+  };
+ 
+  if(ldaMode==='pca'||ldaMode==='both') drawDir(px,py,'#7c6bff','← PCA');
+  if(ldaMode==='lda'||ldaMode==='both') drawDir(lx,ly,'#6bffd4','← LDA');
+ 
+  if(ldaMode==='proj'){
+    // Show projections
+    [...c1.map(p=>({...p,col:'rgba(107,255,212,.5)'})),...c2.map(p=>({...p,col:'rgba(255,107,157,.5)'}))].forEach(p=>{
+      const t=(p.x-gmx)*lx+(p.y-gmy)*ly;
+      const px2=gmx+t*lx, py2=gmy+t*ly;
+      lctx.strokeStyle=p.col; lctx.lineWidth=.7; lctx.setLineDash([2,3]);
+      lctx.beginPath(); lctx.moveTo(tX(p.x),tY(p.y)); lctx.lineTo(tX(px2),tY(py2)); lctx.stroke();
+      lctx.setLineDash([]);
+      lctx.beginPath(); lctx.arc(tX(px2),tY(py2),3,0,Math.PI*2);
+      lctx.fillStyle=p.col; lctx.fill();
+    });
+    drawDir(lx,ly,'#6bffd4','← LDA (hướng chiếu)');
+  }
+ 
+  // Means
+  [m1,m2].forEach((m,i)=>{
+    lctx.beginPath(); lctx.arc(tX(m.x),tY(m.y),7,0,Math.PI*2);
+    lctx.fillStyle=i?'#ff6b9d':'#6bffd4'; lctx.fill();
+    lctx.strokeStyle='#fff'; lctx.lineWidth=1.5; lctx.stroke();
+  });
+ 
+  // Stats
+  const pl=c1.map(p=>(p.x-m1.x)*lx+(p.y-m1.y)*ly), ql=c2.map(p=>(p.x-m2.x)*lx+(p.y-m2.y)*ly);
+  const sw_proj=pl.reduce((s,v)=>s+v*v,0)+ql.reduce((s,v)=>s+v*v,0);
+  const d2=((m1.x-m2.x)*lx+(m1.y-m2.y)*ly)**2;
+  const sb_proj=d2*(c1.length+c2.length);
+  document.getElementById('sw').textContent=sw_proj.toFixed(2);
+  document.getElementById('sb').textContent=sb_proj.toFixed(2);
+  document.getElementById('jv').textContent=(sb_proj/sw_proj).toFixed(3);
+ 
+  lctx.fillStyle='rgba(107,255,212,.7)'; lctx.font='11px "Be Vietnam Pro"';
+  lctx.fillText('Lớp 1 (tâm ●)', tX(-2),tY(1.8));
+  lctx.fillStyle='rgba(255,107,157,.7)';
+  lctx.fillText('Lớp 2 (tâm ●)', tX(1.5),tY(-1.5));
+}
+ 
+// Init
+window.addEventListener('load',()=>{
+  genData(); resetPower(); showDir('both');
+  updateVarChart();
+});
+window.addEventListener('resize',()=>{
+  genData(); resetPower(); drawLDA();
+});
+</script>
+</body>
+</html>

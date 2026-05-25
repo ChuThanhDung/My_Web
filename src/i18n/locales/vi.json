@@ -54,8 +54,8 @@
     "title": "Chủ đề Machine Learning",
     "subtitle": "Khám phá các thuật toán và khái niệm trong Machine Learning.",
     "pca": {
-      "title": "PCA",
-      "desc": "Phân tích thành phần chính (PCA) để giảm chiều dữ liệu."
+      "title": "Giảm chiều Dữ liệu",
+      "desc": "Giảm số lượng đặc trưng bằng các phương pháp PCA, SVD và LDA."
     },
     "kmeans": {
       "title": "K-Means",
